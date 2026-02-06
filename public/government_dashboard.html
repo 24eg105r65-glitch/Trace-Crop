@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gov Oversight | TraceCrop</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .dashboard-container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 40px auto;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .dashboard-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+         .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            width: auto;
+            font-size: 14px;
+        }
+        .logout-btn:hover {
+            background: rgba(255, 80, 80, 0.8);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #4caf50;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #aaa;
+        }
+        .report-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        th {
+            color: #888;
+            font-weight: 500;
+        }
+        .status-flag {
+            color: #f44336;
+            font-weight: bold;
+        }
+        .status-ok {
+            color: #4caf50;
+        }
+        .export-btn {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container dashboard-container">
+    <div class="card">
+        <div id="google_translate_element" style="margin-bottom: 20px; text-align: right;"></div>
+        <div class="dashboard-header">
+            <h2>🏛️ Government Oversight Portal</h2>
+            <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="total-crops">...</div>
+                <div class="stat-label">Total Batches</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-farmers">...</div>
+                <div class="stat-label">Active Farmers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="flagged-issues">...</div>
+                <div class="stat-label">Flagged / Rejected</div>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <button class="export-btn" onclick="alert('Exporting PDF Report...')">Export Report</button>
+            <h3 style="margin-top: 0;">Recent Activity Log</h3>
+            
+            <div class="table-wrapper">
+                <table id="recent-table">
+                    <thead>
+                        <tr>
+                            <th>Batch ID</th>
+                            <th>Crop</th>
+                            <th>Farmer</th>
+                            <th>Distributor</th>
+                            <th>Auditor</th>
+                            <th>Grade</th>
+                            <th>Report</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dynamic Content -->
+                    </tbody>
+                </table>
+                 <p id="loading-text" style="text-align: center; color: #aaa; margin-top: 20px;">Loading data...</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; border-top: 1px dashed #555; padding-top: 20px;">
+             <button onclick="debugCheck()" style="font-size: 11px; background: #333; color: #aaa; border: none; padding: 5px 10px; cursor: pointer;">Show Debug Info</button>
+             <div id="debug-log" style="font-family: monospace; font-size: 11px; color: yellow; margin-top: 10px; background: rgba(0,0,0,0.5); padding: 10px; display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onerror = function(msg, url, line) {
+        const d = document.createElement('div');
+        d.style = 'position:fixed;top:0;left:0;background:red;color:white;padding:20px;z-index:9999';
+        d.innerText = "Error: " + msg + " at " + line;
+        document.body.appendChild(d);
+        return false;
+    }
+</script>
+
+<script type="module">
+    import { auth, db, onAuthStateChanged, collection, getDocs, query, orderBy, limit, onSnapshot, doc, getDoc } from './firebase-config.js?v=2';
+
+    // Check auth
+    onAuthStateChanged(auth, (user) => {
+        if (!user) window.location.href = 'login.html';
+    });
+
+    // Simple Name Cache
+    const nameCache = {};
+
+    async function resolveNames(ids) {
+        const unique = [...new Set(ids)].filter(id => id && id !== 'Unassigned' && id !== 'anonymous');
+        const missing = unique.filter(id => !nameCache[id]);
+        
+        if (missing.length === 0) return nameCache;
+
+        await Promise.all(missing.map(async (uid) => {
+            try {
+                const snap = await getDoc(doc(db, "users", uid));
+                nameCache[uid] = snap.exists() ? (snap.data().fullName || uid.slice(0,6)) : "Unknown";
+            } catch (e) {
+                console.warn("Failed to resolve:", uid, e);
+                nameCache[uid] = uid.slice(0,6);
+            }
+        }));
+        return nameCache;
+    }
+
+    function initRealtimeStats() {
+        console.log("initRealtimeStats started...");
+        const q = query(collection(db, "crops"));
+        
+        // Use onSnapshot for Real-Time Updates
+        const unsubscribe = onSnapshot(q, async (snapshot) => {
+            console.log("Snapshot received! Docs count:", snapshot.size);
+            
+            let totalBatches = 0;
+            let farmersSet = new Set();
+            let flaggedCount = 0;
+            const recentRows = [];
+            const userIdsToResolve = [];
+
+            if (snapshot.empty) {
+                 console.log("Snapshot is empty.");
+                 document.getElementById('loading-text').innerText = "No data available.";
+                 updateStats(0, 0, 0);
+                 const tbody = document.querySelector('#recent-table tbody');
+                 tbody.innerHTML = '';
+                 return;
+            }
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                totalBatches++;
+                if(data.farmerId) {
+                    farmersSet.add(data.farmerId);
+                    userIdsToResolve.push(data.farmerId);
+                }
+                if(data.distributorId) userIdsToResolve.push(data.distributorId);
+                if(data.auditedBy) userIdsToResolve.push(data.auditedBy);
+
+                if(data.qualityGrade === 'REJECTED' || data.qualityGrade === 'Grade C') {
+                    flaggedCount++;
+                }
+                
+                recentRows.push({
+                    id: doc.id,
+                    name: data.name,
+                    location: data.location,
+                    grade: data.qualityGrade || 'Pending',
+                    status: data.status,
+                    
+                    farmer: data.farmerId || 'Unknown',
+                    distributor: data.distributorId || 'Unassigned',
+                    auditor: data.auditedBy || 'Pending',
+                    reportUrl: data.reportUrl || '',
+                    createdAt: data.createdAt
+                });
+            });
+
+            // Parallel Name Resolution (only fetches new IDs)
+            console.log("Resolving names for:", userIdsToResolve.length, "IDs");
+            await resolveNames(userIdsToResolve);
+            console.log("Names resolved.");
+
+            updateStats(totalBatches, farmersSet.size, flaggedCount);
+
+            recentRows.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            const tbody = document.querySelector('#recent-table tbody');
+            tbody.innerHTML = '';
+            
+            recentRows.forEach(row => {
+                const tr = document.createElement('tr');
+                
+                const farmerName = nameCache[row.farmer] || row.farmer.slice(0, 8);
+                const distName = nameCache[row.distributor] || (row.distributor === 'Unassigned' ? 'Unassigned' : row.distributor.slice(0,8));
+                const auditorName = nameCache[row.auditor] || (row.auditor === 'Pending' ? '-' : row.auditor.slice(0,8));
+
+                tr.innerHTML = `
+                    <td>#${row.id.slice(0, 8).toUpperCase()}</td>
+                    <td><b>${row.name}</b></td>
+                    <td style="font-size: 13px;">${farmerName}</td>
+                    <td style="font-size: 13px; color: #aaa;">${distName}</td>
+                    <td style="font-size: 13px;">${auditorName}</td>
+                    <td style="font-weight: bold; color: ${getGradeColor(row.grade)}">${row.grade}</td>
+                    <td style="font-size: 13px;">
+                        ${row.reportUrl ? `<a href="${row.reportUrl}" target="_blank" style="color: #2196f3; text-decoration: none;">📄 View</a>` : '-'}
+                    </td>
+                    <td><span class="${getStatusClass(row.grade)}">${row.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('loading-text').style.display = 'none';
+            console.log("Table updated successfully.");
+
+        }, (error) => {
+            console.error("Error listening to stats:", error);
+            document.getElementById('loading-text').innerText = "Error: " + error.message;
+            
+            // Force show debug log
+            const log = document.getElementById('debug-log');
+            log.style.display = 'block';
+            log.innerHTML += "<br><b>SNAPSHOT ERROR:</b> " + error.message;
+        });
+    }
+
+    // Colors Helpers...
+    function getGradeColor(grade) {
+         if(grade === 'REJECTED') return 'red';
+         if(grade === 'Grade A') return '#4caf50';
+         if(grade === 'Grade B') return '#cddc39';
+         return '#999';
+    }
+
+    function updateStats(batches, farmers, issues) {
+        document.getElementById('total-crops').innerText = batches;
+        document.getElementById('total-farmers').innerText = farmers;
+        document.getElementById('flagged-issues').innerText = issues;
+    }
+
+    function getStatusClass(grade) {
+        if(grade === 'REJECTED') return 'status-flag';
+        if(grade === 'Grade A') return 'status-ok';
+        return '';
+    }
+
+    // Start Listener
+    initRealtimeStats();
+
+    window.debugCheck = function() {
+        const log = document.getElementById('debug-log');
+        log.style.display = 'block';
+        log.innerHTML = "Checking connection...<br>";
+        log.innerHTML += "Auth User: " + (auth.currentUser ? auth.currentUser.uid : 'None') + "<br>";
+        log.innerHTML += "Crops Collection Reference Created.<br>";
+        log.innerHTML += "Waiting for snapshot...";
+    }
+</script>
+
+</body>
+</html>

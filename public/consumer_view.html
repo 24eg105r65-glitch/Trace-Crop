@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Track Your Food | TraceCrop</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .consumer-container {
+            max-width: 600px;
+            width: 100%;
+            margin: 40px auto;
+        }
+        .header-logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .search-area {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .search-input {
+            width: 70%;
+            padding: 12px 20px;
+            border-radius: 30px;
+            border: none;
+            background: #fff;
+            color: #333;
+            font-size: 16px;
+            outline: none;
+        }
+        .search-btn {
+            padding: 12px 24px;
+            border-radius: 30px;
+            border: none;
+            background: #4caf50;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            width: 25%;
+            margin-left: 10px;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            border-left: 3px solid rgba(255,255,255,0.6); /* Made brighter and thicker */
+            margin-top: 30px;
+        }
+        .timeline-item {
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: -36px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            background: #4caf50;
+            border-radius: 50%;
+            border: 2px solid #1a1a1a;
+        }
+        .timeline-date {
+            font-size: 12px;
+            color: #4caf50;
+            margin-bottom: 5px;
+        }
+        .timeline-content {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        h4 { margin: 0 0 5px 0; }
+        p { margin: 0; color: #ccc; font-size: 14px; }
+        
+        .product-details {
+            text-align: center;
+            margin-bottom: 30px;
+            display: none; /* Hidden by default */
+        }
+        .grade-a {
+            color: #4caf50;
+            font-weight: bold;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container consumer-container">
+    <div class="card">
+         <div id="google_translate_element" style="margin-bottom: 20px; text-align: center;"></div>
+        <div class="header-logo">
+            <h1> TraceCrop Viewer</h1>
+            <p>Scan QR code or enter Batch ID to trace your product's journey.</p>
+        </div>
+
+        <div class="search-area">
+            <input type="text" class="search-input" id="batchInput" placeholder="Enter Batch ID (e.g. TRC-2023-889)">
+            <button class="search-btn" onclick="showJourney()">TRACE</button>
+        </div>
+
+
+
+        <div id="results" style="display: none;">
+            <div class="product-details">
+                <h2 id="res-name">Product: ...</h2>
+                <div class="grade-a" id="res-grade">...</div>
+                <p id="res-origin">Origin: ...</p>
+                <p id="res-id" style="font-size: 12px; color: #555; margin-top: 5px;"></p>
+            </div>
+
+            <h3>Journey Timeline</h3>
+            <div class="timeline" id="timeline-container">
+               <!-- Dynamic Timeline -->
+            </div>
+             <button onclick="window.location.href='index.html'" style="width:100%; padding: 10px; background: transparent; border: 1px solid #555; color: #aaa; margin-top: 20px;">Back to Home</button>
+        </div>
+    </div>
+</div>
+
+
+    </div>
+</div>
+<div id="toast-container"></div>
+
+<script>
+    // 1. Global Debug Logger (Console only)
+    function logToScreen(msg, type='INFO') {
+        if(type === 'ERROR') console.error(`[${type}] ${msg}`);
+        else console.log(`[${type}] ${msg}`);
+    }
+    
+    window.onerror = function(msg, url, line) {
+        logToScreen(`${msg} (Line ${line})`, 'ERROR');
+        return false;
+    };
+    
+    // 2. Define safe fallback for button click immediately
+    window.showJourney = function() {
+        showToast("System is still initializing... Please wait.", "warn");
+    };
+
+    // 3. Global Toast Function
+    window.showToast = function(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<span>${message.replace(/\n/g, '<br>')}</span>`; // Allow line breaks
+
+        // Auto remove
+        setTimeout(() => {
+            toast.classList.add('hiding');
+            toast.addEventListener('animationend', () => toast.remove());
+        }, 4000);
+
+        container.appendChild(toast);
+    };
+    
+    logToScreen("Page script initialized. Waiting for Module...");
+</script>
+
+<script type="module">
+    logToScreen("Module script starting...");
+    
+    import { db, doc, getDoc, collection, query, limit, getDocs, orderBy } from './firebase-config.js?v=2'; // v2 cache buster
+
+    logToScreen("Firebase Config Loaded Successfully.");
+
+    // 3. Define Real Logic
+    // 3. Define Real Logic with Soft Matching
+    window.showJourney = async function() {
+        const btn = document.querySelector('.search-btn');
+        const resultsDiv = document.getElementById('results');
+        const rawInput = document.getElementById('batchInput').value;
+        const input = rawInput.replace(/#/g, '').trim().toUpperCase(); // Normalize to Uppercase for search
+        
+        console.log("Searching for ID (Soft Match):", input);
+
+        if(input.length < 5) {
+            showToast('Please enter at least 5 characters.', 'warn');
+            return;
+        }
+
+        btn.innerText = 'Scanning...';
+        resultsDiv.style.display = 'none';
+
+        try {
+            // STRATEGY: Since user has a partial ID (e.g. FWL1YX7D from fwl1YX7d...), 
+            // and we can't easily substring match doc IDs in Firestore rules,
+            // we will fetch recent crops and matched on the client side for this prototype.
+            // In production, you would store a 'shortId' field to query against.
+            
+            logToScreen(`Scanning database for batch containing "${input}"...`);
+            
+            const q = query(collection(db, "crops"), limit(50)); // Look at last 50 crops
+            const snapshot = await getDocs(q);
+            
+            let foundDoc = null;
+            let foundId = null;
+
+            snapshot.forEach(doc => {
+                // Check if Real ID starts with the input (Case Insensitive)
+                if(doc.id.toUpperCase().includes(input)) {
+                    foundDoc = doc.data();
+                    foundId = doc.id;
+                }
+            });
+
+            if (foundDoc) {
+                logToScreen("Match found!");
+                displayResults(foundId, foundDoc);
+            } else {
+                logToScreen("No matching batch found.", 'WARN');
+                showToast("No batch found matching that ID.<br>Try checking the list below.", "error");
+            }
+            btn.innerText = 'TRACE';
+
+        } catch (error) {
+            logToScreen(`Trace Error: ${error.message} (${error.code})`, 'ERROR');
+            showToast("System Error: " + error.message, 'error');
+            btn.innerText = 'TRACE';
+        }
+    };
+
+    // 4. Helper Functions
+    window.displayResults = function(id, data) {
+         document.getElementById('results').style.display = 'block';
+         document.querySelector('.product-details').style.display = 'block';
+         
+         document.getElementById('res-name').innerText = `Product: ${data.name} (${data.variety})`;
+         document.getElementById('res-origin').innerText = `Origin: ${data.location}`;
+         
+         const reportArea = document.getElementById('res-id');
+         reportArea.innerHTML = `Batch ID: ${id}${data.reportUrl ? ` | <a href="${data.reportUrl}" target="_blank" style="color: #4caf50; font-weight: bold;">[View Lab Report]</a>` : ''}`;
+
+         const gradeEl = document.getElementById('res-grade');
+         gradeEl.innerText = data.qualityGrade || 'Quality Pending';
+         if(data.qualityGrade === 'REJECTED') {
+             gradeEl.style.color = '#f44336';
+         } else if (data.qualityGrade === 'Pending') {
+              gradeEl.style.color = '#ffeb3b';
+         } else {
+             gradeEl.style.color = '#4caf50';
+         }
+
+         const timeline = document.getElementById('timeline-container');
+         timeline.innerHTML = '';
+
+         addTimelineItem(timeline, 'Sown/Registered', data.sowingDate, `Registered by Farmer`);
+         if(data.harvestDate) {
+              addTimelineItem(timeline, 'Harvest Expected/Done', data.harvestDate, 'Harvest date recorded.');
+         }
+         if(data.qualityGrade && data.qualityGrade !== 'Pending') {
+             addTimelineItem(timeline, 'Quality Audited', data.auditedAt || 'N/A', `Graded: ${data.qualityGrade}. ${data.auditNotes || ''}`);
+         }
+         addTimelineItem(timeline, `Current Status: ${data.status}`, data.lastUpdated || data.createdAt, data.location);
+    };
+
+    window.addTimelineItem = function(container, title, date, desc) {
+        const item = document.createElement('div');
+        item.className = 'timeline-item';
+        item.innerHTML = `
+            <div class="timeline-dot"></div>
+            <div class="timeline-date">${date ? new Date(date).toLocaleDateString() : 'Pending'}</div>
+            <div class="timeline-content">
+                <h4>${title}</h4>
+                <p>${desc}</p>
+            </div>
+        `;
+        container.appendChild(item);
+    };
+
+
+
+
+
+</script>
+            
+
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+</body>
+</html>

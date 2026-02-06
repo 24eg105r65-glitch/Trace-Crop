@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quality Audit | TraceCrop</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .dashboard-container {
+            max-width: 900px;
+            width: 100%;
+            margin: 40px auto;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .dashboard-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+         .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            width: auto;
+            font-size: 14px;
+        }
+        .logout-btn:hover {
+            background: rgba(255, 80, 80, 0.8);
+        }
+        .audit-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px; /* Reduced padding */
+            border-radius: 8px;
+            margin-bottom: 10px; /* Reduced margin */
+        }
+        .audit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Better alignment */
+            margin-bottom: 10px; /* Reduced margin */
+        }
+        .batch-info h4 {
+            margin: 0 0 2px 0;
+            font-size: 16px; /* Slightly smaller */
+        }
+        .batch-info p {
+            margin: 0;
+            color: #aaa;
+            font-size: 12px;
+        }
+        .grade-options {
+            display: flex;
+            gap: 5px; /* Tighter gap */
+            margin-bottom: 10px;
+        }
+        .grade-btn {
+            flex: 1;
+            padding: 6px; /* Smaller button padding */
+            font-size: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .grade-btn:hover, .grade-btn.selected {
+            background: #4caf50;
+            border-color: #4caf50;
+        }
+        .grade-btn.reject:hover {
+            background: #f44336;
+            border-color: #f44336;
+        }
+        textarea {
+            width: 100%;
+            padding: 8px; /* Tighter padding */
+            border-radius: 4px;
+            border: none;
+            background: #f0f0f0;
+            color: #333;
+            min-height: 50px; /* Reduced height */
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        .submit-btn {
+            width: 100%;
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px; /* Reduced button size */
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .submit-btn:hover {
+            background: #1976d2;
+        }
+    </style>
+    <style>
+        /* FIX SCROLLING ISSUE */
+        body {
+            height: auto !important;
+            min-height: 100vh;
+            padding-bottom: 50px;
+            align-items: flex-start !important;
+            padding-top: 50px;
+        }
+
+        .dashboard-container {
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .audit-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px; 
+            border-radius: 8px;
+            margin-bottom: 10px; 
+            display: block;
+        }
+        
+        /* ... existing styles ... */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container dashboard-container">
+    <div class="card">
+        <div id="google_translate_element" style="margin-bottom: 20px; text-align: right;"></div>
+        <div class="dashboard-header">
+            <h2>✓ Quality Auditor Dashboard</h2>
+            <div style="text-align: right;">
+                <div id="my-id-display" style="font-size: 11px; color: #888; margin-bottom: 5px;">ID: Loading...</div>
+                <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+            <input type="text" id="batchSearchInput" placeholder="Enter Batch ID (e.g. FWL1YX7D)" 
+                   style="flex: 1; padding: 12px; border-radius: 4px; border: none; background: rgba(255,255,255,0.9); color: #000;"
+                   onkeyup="if(event.key === 'Enter') searchBatch()">
+            <button onclick="searchBatch()" style="width: auto; padding: 12px 24px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">SEARCH</button>
+            <button onclick="document.getElementById('batchSearchInput').value=''; searchBatch()" style="width: auto; padding: 12px 15px; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 4px; cursor: pointer;">CLEAR</button>
+        </div>
+
+        <div id="audit-container">
+            <p style="text-align: center; color: #aaa; margin-top: 50px;">Ready to Audit.<br>Enter a Batch ID above to fetch crop details.</p>
+        </div>
+
+        <!-- Debug Section Hidden -->
+        <div style="display: none;">
+            <div id="debug-log"></div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { auth, db, onAuthStateChanged, collection, query, where, getDocs, updateDoc, doc } from './firebase-config.js?v=2';
+
+    // Check auth
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            window.location.href = 'login.html';
+        } else {
+            // Show short ID, copy full on click
+            const shortId = user.uid.slice(0, 6) + '...';
+            const display = document.getElementById('my-id-display');
+            display.innerHTML = `ID: <span style="cursor: pointer; border-bottom: 1px dotted #ccc;" title="Click to Copy Full ID">${shortId} 📋</span>`;
+            display.onclick = () => {
+                navigator.clipboard.writeText(user.uid);
+                alert("Full User ID copied to clipboard!");
+            };
+        }
+    });
+
+    const container = document.getElementById('audit-container');
+
+
+
+    function getGradeColor(grade) {
+        if(grade === 'Grade A') return '#4caf50'; // Green
+        if(grade === 'Grade B') return '#cddc39'; // Lime
+        if(grade === 'Grade C') return '#ffc107'; // Amber
+        if(grade === 'REJECTED') return '#f44336'; // Red
+        return '#ffeb3b'; // Yellow (Pending)
+    }
+
+    async function handleAuditSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const id = form.getAttribute('data-id');
+        const grade = form.querySelector('.selected-grade').value;
+        const notes = form.querySelector('.audit-notes').value;
+        const btn = form.querySelector('button[type="submit"]');
+
+        if(!grade) {
+            alert("Please select a grade.");
+            return;
+        }
+
+        btn.innerText = 'Submitting...';
+        btn.disabled = true;
+
+        try {
+            await updateDoc(doc(db, "crops", id), {
+                qualityGrade: grade,
+                auditNotes: notes,
+                auditedBy: auth.currentUser ? auth.currentUser.uid : 'anonymous',
+                auditedAt: new Date().toISOString()
+            });
+            
+            alert('Audit Report Submitted!');
+            // Refresh result but keep search term if any
+            searchBatch(); 
+        } catch (error) {
+             console.error("Error submitting audit:", error);
+             alert("Error: " + error.message);
+             btn.innerText = 'SUBMIT AUDIT REPORT';
+             btn.disabled = false;
+        }
+    }
+
+    // Expose search function globally
+    window.searchBatch = function() {
+        const input = document.getElementById('batchSearchInput').value.trim().toUpperCase();
+        loadBatches(input);
+    };
+
+    // Expose debug function
+    window.debugCheck = async function() {
+        const log = document.getElementById('debug-log');
+        log.style.display = 'block';
+        log.innerHTML = "Scanning Database...<br>";
+        
+        try {
+            const uid = auth.currentUser ? auth.currentUser.uid : 'No User Logged In (This is OK for reading)';
+            log.innerHTML += `My User ID: <b>${uid}</b><br>------------------------<br>`;
+            
+            const q = query(collection(db, "crops"), limit(10));
+            const snaps = await getDocs(q);
+            
+            if (snaps.empty) {
+                log.innerHTML += "Database is EMPTY. No crops exist at all.";
+                return;
+            }
+
+            snaps.forEach(d => {
+                const data = d.data();
+                log.innerHTML += `Batch ...${d.id.slice(-4)}: Status=[${data.status}] Grade=[${data.qualityGrade}]<br>`;
+            });
+
+        } catch (e) {
+            log.innerText = "Debug Error: " + e.message;
+        }
+    };
+
+    async function loadBatches(searchId = null) {
+        const container = document.getElementById('audit-container');
+        
+        if (!searchId) {
+            container.innerHTML = '<p style="text-align: center; color: #aaa; margin-top: 50px;">Please enter a Batch ID to search.</p>';
+            return;
+        }
+
+        const normalizedSearchId = searchId.toUpperCase();
+        console.log("Searching for:", normalizedSearchId);
+        container.innerHTML = '<p style="text-align: center; color: #aaa;">Fetching from Blockchain...</p>';
+        
+        try {
+            // Note: In production, use server-side filtering. For demo, we fetch and filter.
+            const querySnapshot = await getDocs(collection(db, "crops"));
+            console.log("Docs scanned:", querySnapshot.size);
+            
+            container.innerHTML = '';
+            
+            if (querySnapshot.empty) {
+                container.innerHTML = '<p style="text-align: center; color: #aaa;">No batches found.</p>';
+                return;
+            }
+
+            let foundCount = 0;
+
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const id = docSnap.id;
+                
+                // Case-insensitive matching
+                if (normalizedSearchId && !id.toUpperCase().includes(normalizedSearchId)) {
+                    return; 
+                }
+
+                foundCount++;
+
+                const card = document.createElement('div');
+                card.className = 'audit-card';
+                // Force visibility
+                card.style.display = 'block';
+                card.style.border = '1px solid rgba(255,255,255,0.1)';
+                
+                card.innerHTML = `
+                    <div class="audit-header">
+                        <div class="batch-info">
+                            <h4>Batch #${id.slice(0, 8).toUpperCase()}</h4>
+                            <p>${data.name} - Location: ${data.location}</p>
+                            <p style="color: #4caf50; font-weight: bold; font-size: 11px;">Status: ${data.status}</p>
+                        </div>
+                        <div style="background: ${getGradeColor(data.qualityGrade)}; color: #000; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px;">${data.qualityGrade || 'PENDING'}</div>
+                    </div>
+
+                    <form class="audit-form" data-id="${id}" data-existing-report="${data.reportUrl || ''}">
+                        <label style="color: #fff; margin-bottom: 10px; display: block;">Assign Quality Grade</label>
+                        <div class="grade-options">
+                            <div class="grade-btn" data-value="Grade A">Grade A</div>
+                            <div class="grade-btn" data-value="Grade B">Grade B</div>
+                            <div class="grade-btn" data-value="Grade C">Grade C</div>
+                            <div class="grade-btn reject" data-value="REJECTED">REJECT</div>
+                        </div>
+                        <input type="hidden" class="selected-grade" value="">
+
+                        <label style="color: #fff; margin-bottom: 10px; display: block;">Audit Comments / Lab Results</label>
+                        <textarea class="audit-notes" placeholder="Enter protein content, moisture levels, or rejection reasons...">${data.auditNotes || ''}</textarea>
+
+
+
+                        <button type="submit" class="submit-btn" style="background: #2196f3;">SUBMIT AUDIT REPORT</button>
+                    </form>
+                `;
+                container.appendChild(card);
+            });
+
+            if (foundCount === 0) {
+                 container.innerHTML = '<p style="text-align: center; color: #aaa;">No matching crop found.</p>';
+            }
+
+            // Re-attach listeners
+            attachListeners();
+
+        } catch (error) {
+            console.error("Error loading batches:", error);
+            container.innerHTML = '<p style="color: red; text-align: center;">Error loading batches.</p>';
+        }
+    }
+
+    function attachListeners() {
+        // 1. Grade Selection
+        document.querySelectorAll('.grade-options').forEach(group => {
+            group.querySelectorAll('.grade-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    group.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    group.parentElement.querySelector('.selected-grade').value = this.getAttribute('data-value');
+                    
+                    const submitBtn = group.parentElement.querySelector('.submit-btn');
+                    if (this.getAttribute('data-value') === 'REJECTED') {
+                            submitBtn.style.backgroundColor = '#f44336';
+                            submitBtn.innerText = 'REJECT BATCH';
+                    } else {
+                            submitBtn.style.backgroundColor = '#4caf50';
+                            submitBtn.innerText = 'APPROVE & SUBMIT';
+                    }
+                });
+            });
+        });
+
+        // 2. Form Submission
+        document.querySelectorAll('.audit-form').forEach(form => {
+            form.addEventListener('submit', handleAuditSubmit);
+        });
+    }
+
+
+</script>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+</body>
+</html>
+                  

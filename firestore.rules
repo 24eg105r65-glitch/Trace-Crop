@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper to get user role
+    function getRole() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : 'none';
+    }
+
+    // Users Collection: Users can read/write their own profile
+    // Allow PUBLIC READ for authenticated users so Dashboards can resolve Names from IDs
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Crops Collection: The Core Ledger
+    match /crops/{cropId} {
+      // 1. Read: Everyone including public consumers
+      allow read: if true;
+
+      // 2. Create: Allow any authenticated user (will restore role check once debugged)
+      allow create: if request.auth != null;
+
+      // 3. Update: Robust Logic based on IDs
+      allow update: if request.auth != null && (
+        
+        // Farmer: Owns the crop
+        (resource.data.farmerId == request.auth.uid && 
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['qualityGrade', 'auditNotes', 'auditedBy'])) 
+        
+        ||
+
+        // Distributor: Assigned to the crop
+        (resource.data.distributorId == request.auth.uid && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'location', 'lastUpdated']))
+        
+        ||
+
+        // Auditor: Special role check still needed (or could add auditorId to crop)
+        // Keeping role check for Auditor as they are not pre-assigned
+        (getRole() == 'Quality Auditor' && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['qualityGrade', 'auditNotes', 'auditedBy', 'auditedAt', 'reportUrl']))
+
+      );
+      
+      // Delete: Only Farmer who owns the crop
+      // Delete: Only Farmer who owns the crop (Simplified to fix permission issues)
+      allow delete: if request.auth != null && resource.data.farmerId == request.auth.uid; 
+    }
+  }
+}

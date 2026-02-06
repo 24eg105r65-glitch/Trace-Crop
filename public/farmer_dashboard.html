@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Farmer Dashboard | TraceCrop</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Specific dashboard styles over style.css */
+        .dashboard-container {
+            max-width: 800px;
+            width: 100%;
+            margin: 40px auto;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .dashboard-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            width: auto;
+            font-size: 14px;
+        }
+        .logout-btn:hover {
+            background: rgba(255, 80, 80, 0.8);
+        }
+        .grid-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .full-width {
+            grid-column: span 2;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: none;
+            background: #f5f5f5;
+            color: #000;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        /* Success Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-content {
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid #333;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            animation: scaleIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container dashboard-container">
+    <div class="card">
+        <div id="google_translate_element" style="margin-bottom: 20px; text-align: right;"></div>
+        <div class="dashboard-header">
+            <h2>🌾 Farmer Dashboard</h2>
+            <div style="text-align: right;">
+                <div id="my-id-display" style="font-size: 11px; color: #888; margin-bottom: 5px;">ID: Loading...</div>
+                <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
+            </div>
+        </div>
+
+        <div id="profile-status" style="background: rgba(255,193,7,0.1); border: 1px solid #ffc107; padding: 10px; border-radius: 6px; margin-bottom: 25px; display: none; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">ℹ️</span>
+            <div>
+                <div style="font-weight: bold; color: #ffc107;">Profile Verification</div>
+                <div id="role-display-text" style="font-size: 13px; color: #ddd;">Checking account role...</div>
+            </div>
+        </div>
+
+        <h3>Register New Crop</h3>
+        <p style="color: #aaa; margin-bottom: 20px; font-size: 14px;">Enter details to track your fresh produce on the blockchain.</p>
+
+        <form id="cropForm">
+            <div class="grid-form">
+                <div>
+                    <label>Crop Name</label>
+                    <input type="text" id="cropName" placeholder="e.g. Wheat, Tomato" required>
+                </div>
+                <div>
+                    <label>Crop Variety/Type</label>
+                    <input type="text" id="cropVariety" placeholder="e.g. Organic, Hybrid" required>
+                </div>
+                
+                <div>
+                    <label>Sowing Date</label>
+                    <input type="date" id="sowingDate" required>
+                </div>
+
+
+                <div class="full-width">
+                    <label>Farm Location / Land ID</label>
+                    <input type="text" id="farmLocation" placeholder="Enter Farm ID or Location Coordinates" required>
+                </div>
+
+                <div class="full-width">
+                    <label>Fertilizers Used (Optional)</label>
+                    <textarea id="fertilizers" placeholder="List any fertilizers or pesticides used..."></textarea>
+                </div>
+                
+                <div class="full-width">
+                    <label>Transfer to Distributor (Enter Distributor ID)</label>
+                    <input type="text" id="distributorId" placeholder="Optional: Enter Distributor User ID">
+                </div>
+                
+                <div class="full-width">
+                    <label>Upload Crop Image</label>
+                    <input type="file" style="padding: 10px; background: rgba(255,255,255,0.1); color: #fff;">
+                </div>
+            </div>
+
+            <button type="submit" style="margin-top: 20px;">REGISTER CROP TO BLOCKCHAIN</button>
+        </form>
+
+        <hr style="margin: 40px 0; border: 0; border-top: 1px solid rgba(255,255,255,0.1);">
+
+        <h3>My Registered Crops</h3>
+        <div id="my-crops-container">
+            <p style="text-align: center; color: #aaa;">Loading your crops...</p>
+        </div>
+
+        <!-- Debug Section -->
+        <div style="margin-top: 40px; border-top: 1px dashed #555; padding-top: 20px;">
+            <button onclick="debugCheck()" style="font-size: 11px; background: #333; color: #aaa; border: none; padding: 5px 10px; cursor: pointer;">Show Debug Info (Why is my list empty?)</button>
+            <div id="debug-log" style="font-family: monospace; font-size: 11px; color: yellow; margin-top: 10px; background: rgba(0,0,0,0.5); padding: 10px; display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal HTML -->
+<div id="success-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <div style="font-size: 50px; margin-bottom: 20px;">✅</div>
+        <h3 style="color: #4caf50; margin: 0 0 10px 0; font-size: 24px;">Success!</h3>
+        <p style="color: #bbb; margin-bottom: 5px;">Crop Registered Successfully</p>
+        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; margin: 15px 0; font-family: monospace; color: #ffeb3b; word-break: break-all;">
+            Batch ID: <span id="modal-batch-id">Loading...</span>
+        </div>
+        <button onclick="closeSuccessModal()" style="background: #4caf50; border: none; padding: 12px 30px; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">Continue</button>
+    </div>
+</div>
+
+
+
+<script type="module">
+    import { db, collection, addDoc, auth, onAuthStateChanged, query, where, getDocs, deleteDoc, doc, limit } from './firebase-config.js?v=2';
+
+    // Expose debug function
+    // Expose debug function and Modal functions
+    window.closeSuccessModal = function() {
+        document.getElementById('success-modal').style.display = 'none';
+    };
+
+    window.debugCheck = async function() {
+        const log = document.getElementById('debug-log');
+        log.style.display = 'block';
+        log.innerHTML = "Scanning Database...<br>";
+        
+        try {
+            const uid = auth.currentUser.uid;
+            log.innerHTML += `My User ID: <b>${uid}</b><br>------------------------<br>`;
+            
+            // Get last 5 crops regardless of owner
+            const q = query(collection(db, "crops"), limit(5));
+            const snaps = await getDocs(q);
+            
+            if (snaps.empty) {
+                log.innerHTML += "Database is EMPTY. No crops exist at all.";
+                return;
+            }
+
+            snaps.forEach(d => {
+                const data = d.data();
+                const owner = data.farmerId;
+                const match = owner === uid ? "✅ MATCH" : "❌ MISMATCH";
+                
+                log.innerHTML += `Batch ...${d.id.slice(-4)}: Owned By [${owner}] (${match})<br>`;
+            });
+            
+            log.innerHTML += "<br>If you see 'MISMATCH', it means these crops belong to a different User ID.";
+
+        } catch (e) {
+            log.innerText = "Debug Error: " + e.message;
+        }
+    };
+
+    // Check auth state
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            window.location.href = 'login.html';
+        } else {
+            // Show short ID
+            const shortId = user.uid.slice(0, 6) + '...';
+            const display = document.getElementById('my-id-display');
+            display.innerHTML = `ID: <span style="cursor: pointer; border-bottom: 1px dotted #ccc;" title="Click to Copy Full ID">${shortId} 📋</span>`;
+            display.onclick = () => {
+                navigator.clipboard.writeText(user.uid);
+                alert("Full User ID copied to clipboard!");
+            };
+            
+            // Load profile role info
+            checkProfileRole(user.uid);
+            
+            // Load crops
+            loadMyCrops(user.uid);
+        }
+    });
+
+    async function checkProfileRole(uid) {
+        const statusBox = document.getElementById('profile-status');
+        const roleText = document.getElementById('role-display-text');
+        
+        try {
+            const userDoc = await getDoc(doc(db, "users", uid));
+            statusBox.style.display = 'flex';
+            
+            if (userDoc.exists()) {
+                const role = userDoc.data().role;
+                roleText.innerHTML = `Your assigned role: <b style="color: #4caf50;">${role}</b>`;
+                if (role !== 'Farmer') {
+                    roleText.innerHTML += `<br><span style="color: #ff5252; font-size: 11px;">Warning: Registration might fail if you are not a 'Farmer'.</span>`;
+                }
+            } else {
+                roleText.innerHTML = `<span style="color: #ff5252;">Profile missing!</span> Please contact support or re-register.`;
+            }
+        } catch (e) {
+            console.error("Profile check failed:", e);
+            statusBox.style.display = 'flex';
+            roleText.innerText = "Could not verify role: " + e.message;
+        }
+    }
+
+    async function loadMyCrops(uid) {
+        console.log("Loading crops for:", uid);
+        const container = document.getElementById('my-crops-container');
+        container.innerHTML = '<p style="text-align: center; color: #aaa;">Loading...</p>';
+        
+        try {
+            const q = query(collection(db, "crops"), where("farmerId", "==", uid));
+            const snapshot = await getDocs(q);
+            console.log("Found crops:", snapshot.size);
+            
+            container.innerHTML = '';
+            
+            if (snapshot.empty) {
+                container.innerHTML = '<p style="text-align: center; color: #aaa;">No crops registered yet.</p>';
+                // alert("Debug: No crops found for your ID."); // Optional noisy debug
+                return;
+            }
+
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                const item = document.createElement('div');
+                item.style.background = 'rgba(255,255,255,0.05)';
+                item.style.padding = '15px';
+                item.style.borderRadius = '8px';
+                item.style.marginBottom = '10px';
+                item.style.display = 'flex';
+                item.style.justifyContent = 'space-between';
+                item.style.alignItems = 'center';
+                
+                item.innerHTML = `
+                    <div>
+                        <strong style="color: #4caf50;">${data.name}</strong> (${data.variety})<br>
+                        <span style="font-size: 11px; color: #aaa;">Batch: ${docSnap.id} | Status: ${data.status}</span>
+                    </div>
+                    <button class="delete-btn" data-id="${docSnap.id}" style="background: rgba(239, 83, 80, 0.2); color: #ef5350; border: 1px solid #ef5350; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 10px;">DELETE</button>
+                `;
+                container.appendChild(item);
+            });
+
+            // Add delete listeners
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const id = this.getAttribute('data-id');
+                    if(confirm("Are you sure you want to delete this crop? This action cannot be undone.")) {
+                         try {
+                             await deleteDoc(doc(db, "crops", id));
+                             alert("Crop deleted successfully.");
+                             loadMyCrops(uid); // Refresh
+                         } catch(err) {
+                             console.error(err);
+                             alert("Error deleting: " + err.message);
+                         }
+                    }
+                });
+            });
+
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = '<p style="color: red; text-align: center;">Error loading crops.</p>';
+        }
+    }
+
+    document.getElementById('cropForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const btn = this.querySelector('button');
+        const originalText = btn.innerText;
+        btn.innerText = 'Registering on Blockchain...';
+
+        try {
+            const cropData = {
+                name: document.getElementById('cropName').value,
+                variety: document.getElementById('cropVariety').value,
+                sowingDate: document.getElementById('sowingDate').value,
+
+                location: document.getElementById('farmLocation').value,
+                fertilizers: document.getElementById('fertilizers').value,
+                distributorId: (document.getElementById('distributorId').value || '').trim() || 'Unassigned',
+                farmerId: auth.currentUser ? auth.currentUser.uid : 'anonymous',
+                status: 'Registered', // Registered -> Harvested -> In Transit -> Delivered
+                qualityGrade: 'Pending',
+                createdAt: new Date().toISOString()
+            };
+
+            const docRef = await addDoc(collection(db, "crops"), cropData);
+            
+            // Show Success Modal instead of alert
+            document.getElementById('modal-batch-id').innerText = docRef.id;
+            document.getElementById('success-modal').style.display = 'flex';
+            
+            this.reset();
+            btn.innerText = originalText;
+            loadMyCrops(auth.currentUser.uid); // Refresh list
+
+        } catch (e) {
+            console.error("Error adding document: ", e);
+            alert("Error: " + e.message);
+            btn.innerText = originalText;
+        }
+    });
+</script>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+</body>
+</html>

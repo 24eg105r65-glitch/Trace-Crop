@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | TraceCrop</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <div id="google_translate_element" style="margin-bottom: 20px; text-align: center;"></div>
+        <h1>LOGIN</h1>
+
+        <form id="loginForm">
+            <input type="email" id="email" placeholder="Email Address" required>
+            <input type="password" id="password" placeholder="Password" required>
+
+
+            <button type="submit">LOGIN</button>
+
+            <div style="text-align: center; margin: 15px 0;">
+                <span style="color: #aaa; font-size: 12px;">OR</span>
+            </div>
+            
+            <button type="button" id="googleBtn" style="background: #fff; color: #333; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: bold;">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Sign in with Google
+            </button>
+
+            <p class="login-text">Don't have an account? <a href="index.html" style="color: #4caf50; text-decoration: none;">Sign Up</a></p>
+        </form>
+    </div>
+</div>
+
+<!-- Role Selection Modal for New Google Users -->
+<div id="roleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: #222; padding: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 400px; text-align: center;">
+        <h3 style="margin-top: 0;">Complete Your Profile</h3>
+        <p style="color: #ccc; font-size: 14px; margin-bottom: 20px;">Welcome! Please select your role to continue.</p>
+        
+        <select id="googleRoleSelect" style="width: 100%; padding: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.1); border: 1px solid #444; color: white; border-radius: 4px;">
+            <option value="Farmer">Farmer</option>
+            <option value="Distributor">Distributor</option>
+            <option value="Quality Auditor">Quality Auditor</option>
+            <option value="Consumer">Consumer</option>
+            <option value="Government">Government</option>
+        </select>
+        
+        <button onclick="finishGoogleSignup()" style="width: 100%; padding: 12px; background: #4caf50; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">CONTINUE AS <span id="roleBtnText">FARMER</span></button>
+    </div>
+</div>
+
+<script type="module">
+    import { auth, db, signInWithEmailAndPassword, getDoc, doc, provider, signInWithPopup, setDoc } from './firebase-config.js?v=2';
+
+    // Role Select Update
+    document.getElementById('googleRoleSelect').addEventListener('change', function() {
+        document.getElementById('roleBtnText').innerText = this.value.toUpperCase();
+    });
+
+    let pendingGoogleUser = null;
+
+    // Google Sign In Logic
+    document.getElementById('googleBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('googleBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = 'Connecting...';
+        
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+            
+            // Check if profile exists
+            const docRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                // Existing User - Login
+                handleRedirect(docSnap.data().role);
+            } else {
+                // New User - Show Role Modal
+                pendingGoogleUser = user;
+                document.getElementById('roleModal').style.display = 'flex';
+                btn.innerHTML = originalText;
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("Google Sign In Error: " + error.message);
+            btn.innerHTML = originalText;
+        }
+    });
+
+    // Finish Signup Logic
+    window.finishGoogleSignup = async function() {
+        if (!pendingGoogleUser) return;
+        
+        const role = document.getElementById('googleRoleSelect').value;
+        const btn = document.querySelector('#roleModal button');
+        btn.innerText = 'SAVING...';
+        
+        try {
+            await setDoc(doc(db, "users", pendingGoogleUser.uid), {
+                fullName: pendingGoogleUser.displayName || 'Google User',
+                email: pendingGoogleUser.email,
+                role: role,
+                createdAt: new Date().toISOString()
+            });
+            
+            handleRedirect(role);
+            
+        } catch (error) {
+            alert("Error saving profile: " + error.message);
+            btn.innerText = 'TRY AGAIN';
+        }
+    }
+
+    function handleRedirect(role) {
+        localStorage.setItem('userRole', role);
+        
+        if (role === 'Farmer') window.location.href = 'farmer_dashboard.html';
+        else if (role === 'Distributor') window.location.href = 'distributor_dashboard.html';
+        else if (role === 'Quality Auditor') window.location.href = 'quality_dashboard.html';    
+        else if (role === 'Government') window.location.href = 'government_dashboard.html';
+        else if (role === 'Consumer') window.location.href = 'consumer_view.html';
+        else window.location.href = 'farmer_dashboard.html'; 
+    }
+
+    // Email/Pass Logic
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+
+        try {
+            btn.innerText = 'LOGGING IN...';
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+            
+            if (userDoc.exists()) {
+                handleRedirect(userDoc.data().role);
+            } else {
+                alert("Error: User profile not found.");
+                btn.innerText = originalText;
+            }
+        } catch (error) {
+            alert("Login Failed: " + error.message);
+            btn.innerText = originalText;
+        }
+    });
+</script>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+
+<script>
+    window.onerror = function(msg, url, line) {
+        alert("JS Error: " + msg + " (Line " + line + ")");
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+        alert("Promise Error: " + event.reason);
+    });
+</script>
+</body>
+</html>
