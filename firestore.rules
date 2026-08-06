@@ -31,9 +31,14 @@ service cloud.firestore {
         
         ||
 
-        // Distributor: Assigned to the crop
-        (resource.data.distributorId == request.auth.uid && 
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'location', 'lastUpdated']))
+        // Distributor: Assigned to the crop OR claiming an unassigned crop
+        ((resource.data.distributorId == request.auth.uid && 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'location', 'lastUpdated', 'distributorPublicId']))
+         ||
+         (resource.data.distributorId == 'Unassigned' && 
+          resource.data.qualityGrade != 'Pending' &&
+          request.resource.data.distributorId == request.auth.uid && 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['distributorId', 'distributorPublicId', 'status', 'location', 'lastUpdated'])))
         
         ||
 

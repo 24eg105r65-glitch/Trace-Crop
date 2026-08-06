@@ -1,299 +1,475 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Distributor Dashboard | TraceCrop</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: "#051424",
+                        surface: "#051424",
+                        primary: "#4edea3",
+                        "primary-container": "#10b981",
+                        "on-primary": "#003824",
+                        "on-primary-container": "#00422b",
+                        "surface-container": "#122131",
+                        "surface-container-high": "#1c2d3d",
+                        "surface-container-low": "#0b1520",
+                        "outline-variant": "#2d3c4c",
+                        "on-surface": "#d4e4fa",
+                        "on-surface-variant": "#9cb0cc"
+                    },
+                    fontFamily: {
+                        sans: ["Hanken Grotesk", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        .dashboard-container {
-            max-width: 900px;
-            width: 100%;
-            margin: 40px auto;
+        body {
+            background-color: #051424;
+            color: #d4e4fa;
+            background-image: url("bg-map.jpg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
+        .emerald-glow {
+            box-shadow: 0 0 15px 2px rgba(16, 185, 129, 0.15);
         }
-        .dashboard-header h2 {
-            margin: 0;
-            font-size: 24px;
+        .emerald-btn-glow:hover {
+            box-shadow: 0 0 20px 4px rgba(78, 222, 163, 0.35);
         }
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            width: auto;
-            font-size: 14px;
+        select option {
+            background-color: #122131;
+            color: #d4e4fa;
         }
-        .logout-btn:hover {
-            background: rgba(255, 80, 80, 0.8);
-        }
-        .shipment-card {
-            background: rgba(255, 255, 255, 0.05);
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
         }
-        .shipment-header {
-             display: flex;
-             justify-content: space-between;
-             margin-bottom: 15px;
-             padding-bottom: 10px;
-             border-bottom: 1px solid rgba(255,255,255,0.1);
+        .language-control {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            min-height: 2.75rem;
+            padding: 0.35rem 0.65rem 0.35rem 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(78, 222, 163, 0.24);
+            background: rgba(18, 33, 49, 0.86);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
         }
-        .status-badge {
-            background: #ffa726;
-            color: #000;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
+        .language-control .material-symbols-outlined {
+            color: #4edea3;
+            font-size: 1.25rem;
         }
-        .grid-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
-        }
-        label {
+        .language-control-label {
             display: block;
-            margin-bottom: 5px;
-            font-size: 12px;
-            color: #ccc;
+            margin-bottom: 0.15rem;
+            color: #9cb0cc;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            line-height: 1;
+            text-transform: uppercase;
         }
-        input, select {
-            width: 100%;
-            padding: 8px;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #fff;
-            border-radius: 4px;
+        #google_translate_element {
+            display: inline-block;
         }
-        .action-btn {
-            background: #4caf50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 15px;
-            width: 100%;
+        .goog-te-gadget {
+            font-family: 'Hanken Grotesk', sans-serif !important;
+            font-size: 0 !important;
+            color: transparent !important;
         }
-        .action-btn:hover {
-            background: #43a047;
+        .goog-te-gadget .goog-logo-link {
+            display: none !important;
+        }
+        .goog-te-gadget select.goog-te-combo {
+            background: transparent !important;
+            color: #4edea3 !important;
+            border: none !important;
+            font-family: 'Hanken Grotesk', sans-serif !important;
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            outline: none !important;
+            cursor: pointer !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .goog-te-combo option {
+            background-color: #122131 !important;
+            color: #d4e4fa !important;
+            font-family: 'Hanken Grotesk', sans-serif !important;
+        }
+        iframe.skiptranslate,
+        .goog-te-banner-frame {
+            display: none !important;
+        }
+        body {
+            top: 0px !important;
+        }
+        @media (max-width: 760px) {
+            .language-control {
+                gap: 0.45rem;
+                padding: 0.35rem 0.5rem;
+            }
+            .language-control-label {
+                display: none;
+            }
         }
     </style>
+    <script src="notifications.js?v=4"></script>
+    <script src="voice-prompts.js?v=8"></script>
 </head>
-<body>
+<body class="min-h-screen pb-12 pt-24 font-sans selection:bg-primary selection:text-on-primary bg-slate-950/40">
 
-<div class="container dashboard-container">
-    <div class="card">
-        <div id="google_translate_element" style="margin-bottom: 20px; text-align: right;"></div>
-        <div class="dashboard-header">
-            <h2>🚚 Distributor Dashboard</h2>
-            <div style="text-align: right;">
-                <div id="my-id-display" style="font-size: 11px; color: #888; margin-bottom: 5px;">ID: Loading...</div>
-                <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
+    <!-- Top Navigation Bar -->
+    <nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-4 bg-background/85 backdrop-blur-xl border-b border-outline-variant">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+            <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">dataset</span>
+            <span class="text-xl font-bold text-on-surface">TraceCrop</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="text-right">
+                <div id="my-id-display" class="font-mono text-xs text-on-surface-variant cursor-pointer hover:text-primary transition-colors border-b border-dotted border-outline-variant pb-0.5">
+                    ID: Loading...
+                </div>
             </div>
+            <button onclick="window.location.href='index.html'" 
+                    class="px-4 py-2 rounded-lg bg-surface-container-high hover:bg-red-500/20 hover:text-red-400 border border-outline-variant hover:border-red-500/30 text-sm font-medium transition-all">
+                Logout
+            </button>
         </div>
+    </nav>
 
-        <h3>Active Shipments</h3>
-        <p style="color: #aaa; margin-bottom: 20px; font-size: 14px;">Manage logistics and update shipment conditions.</p>
-
-        <div id="shipments-container">
-            <p style="text-align: center; color: #aaa;">Loading shipments...</p>
-        </div>
-
-        <!-- Debugging Section -->
-        <div style="margin-top: 30px; border-top: 1px dashed #555; padding-top: 20px;">
-            <button onclick="debugCheck()" style="font-size: 10px; background: #333; color: #aaa; border: none; cursor: pointer;">Show Debug Info (If Empty)</button>
-            <div id="debug-log" style="font-family: monospace; font-size: 11px; color: yellow; margin-top: 10px;"></div>
-        </div>
-    </div>
-</div>
-
-<script type="module">
-    import { auth, db, onAuthStateChanged, collection, query, where, getDocs, updateDoc, doc, onSnapshot } from './firebase-config.js?v=2';
-
-    // Check auth
-    onAuthStateChanged(auth, (user) => {
-        if (!user) {
-            window.location.href = 'login.html';
-        } else {
-            // Show short ID, copy full on click
-            const shortId = user.uid.slice(0, 6) + '...';
-            const display = document.getElementById('my-id-display');
-            display.innerHTML = `ID: <span style="cursor: pointer; border-bottom: 1px dotted #ccc;" title="Click to Copy Full ID">${shortId} 📋</span>`;
-            display.onclick = () => {
-                navigator.clipboard.writeText(user.uid);
-                alert("Full User ID copied to clipboard!");
-            };
-            
-            // Safe to load data now that we have a user
-            loadShipments();
-        }
-    });
-
-    const container = document.getElementById('shipments-container');
-
-    async function loadShipments() { // Keeping name but changing implementation
-        const container = document.getElementById('shipments-container');
-        container.innerHTML = '<p style="text-align: center; color: #aaa;">Listening for shipments...</p>';
+    <main class="max-w-4xl mx-auto px-4 space-y-8 z-10 relative">
         
-        try {
-            const uid = auth.currentUser.uid;
-            console.log("Listening for crops for Distributor ID:", uid);
+        <!-- Main section card -->
+        <div class="bg-surface-container/85 backdrop-blur-md border border-outline-variant/60 rounded-2xl p-8 shadow-2xl space-y-8">
             
-            const q = query(collection(db, "crops"), where("distributorId", "==", uid)); 
-            
-            // Switch to Real-Time Listener
-            onSnapshot(q, (querySnapshot) => {
-                console.log("Real-time update! Count:", querySnapshot.size);
-                container.innerHTML = '';
+            <div class="border-b border-outline-variant/30 pb-6">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary text-3xl">local_shipping</span>
+                    <h2 class="text-2xl font-bold tracking-wide uppercase">Distributor Dashboard</h2>
+                </div>
+                <p class="text-sm text-on-surface-variant mt-2">Manage logistics, track delivery routes, and update crop batch environments during transit.</p>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-bold text-primary font-sans mb-4">Incoming Transfer Requests</h3>
+                <p class="text-sm text-on-surface-variant mb-6">Accept transfers of newly registered crops to start tracking them.</p>
                 
-                if (querySnapshot.empty) {
-                    container.innerHTML = '<p style="text-align: center; color: #aaa;">No active shipments found.</p>';
+                <div id="transfers-container" class="space-y-6">
+                    <p class="text-center text-on-surface-variant/60 py-8 font-mono text-sm">Loading requests...</p>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-bold text-primary font-sans mb-4">Active Shipments</h3>
+                <p class="text-sm text-on-surface-variant mb-6">Update shipment conditions and coordinates below.</p>
+                
+                <div id="shipments-container" class="space-y-6">
+                    <p class="text-center text-on-surface-variant/60 py-8 font-mono text-sm">Loading shipments...</p>
+                </div>
+            </div>
+
+            <!-- Debugging Section -->
+            <div class="border-t border-dashed border-outline-variant/40 pt-6">
+                <button onclick="debugCheck()" 
+                        class="text-xs font-mono text-on-surface-variant/70 hover:text-yellow-400 bg-surface-container-low border border-outline-variant/40 px-3 py-1.5 rounded transition-all">
+                    Show Debug Info (If Empty)
+                </button>
+                <div id="debug-log" style="display: none;" 
+                     class="mt-4 p-4 bg-black/60 border border-yellow-500/20 text-yellow-400 font-mono text-xs rounded-lg overflow-x-auto"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <script type="module">
+        import { auth, db, onAuthStateChanged, collection, query, where, getDocs, updateDoc, doc, onSnapshot, limit, getDoc, setDoc, generatePublicId } from './firebase-config.js?v=3';
+
+        let currentUserPublicId = '';
+
+        // Check auth
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+            } else {
+                const display = document.getElementById('my-id-display');
+                const profileSnap = await getDoc(doc(db, "users", user.uid));
+                if (profileSnap.exists()) {
+                    const profile = profileSnap.data();
+                    currentUserPublicId = profile.publicId || generatePublicId(profile.role);
+                    if (!profile.publicId) {
+                        await setDoc(doc(db, "users", user.uid), { publicId: currentUserPublicId }, { merge: true });
+                    }
+                    display.innerHTML = `ID: <span class="font-bold text-primary">${currentUserPublicId}</span>`;
+                    display.onclick = () => navigator.clipboard.writeText(currentUserPublicId);
+                }
+                
+                // Safe to load data now that we have a user
+                loadShipments();
+            }
+        });
+
+        async function loadShipments() {
+            const shipmentsContainer = document.getElementById('shipments-container');
+            const transfersContainer = document.getElementById('transfers-container');
+            
+            shipmentsContainer.innerHTML = '<p class="text-center text-on-surface-variant/60 py-8 font-mono text-sm">Listening for shipments...</p>';
+            transfersContainer.innerHTML = '<p class="text-center text-on-surface-variant/60 py-8 font-mono text-sm">Listening for transfer requests...</p>';
+            
+            try {
+                const uid = auth.currentUser.uid;
+                console.log("Listening for crops for Distributor ID:", uid);
+                
+                // Real-time listener on the entire crops collection
+                onSnapshot(collection(db, "crops"), (querySnapshot) => {
+                    console.log("Real-time update! Count:", querySnapshot.size);
+                    shipmentsContainer.innerHTML = '';
+                    transfersContainer.innerHTML = '';
+                    
+                    let activeCount = 0;
+                    let transferCount = 0;
+
+                    querySnapshot.forEach((docSnap) => {
+                        const data = docSnap.data();
+                        const cropId = docSnap.id;
+                        
+                        const isAssigned = data.distributorId === uid;
+                        const isUnassigned = data.distributorId === 'Unassigned' || !data.distributorId;
+                        const isRegistered = data.status === 'Registered';
+
+                        // Incoming Transfer Requests: status is 'Registered' AND (assigned to me OR unassigned) AND audited (grade is not 'Pending')
+                        const isAudited = data.qualityGrade && data.qualityGrade !== 'Pending';
+                        if (isRegistered && (isAssigned || isUnassigned) && isAudited) {
+                            transferCount++;
+                            const card = document.createElement('div');
+                            card.className = 'bg-surface-container-low border border-outline-variant/40 p-6 rounded-xl space-y-4 hover:border-primary/20 transition-all';
+                            const imageHtml = data.imageUrl 
+                                 ? `<img src="${data.imageUrl}" class="w-12 h-12 object-cover rounded-lg border border-outline-variant/30 flex-shrink-0" alt="Crop Image">`
+                                 : `<div class="w-12 h-12 bg-surface-container-high rounded-lg flex items-center justify-center border border-outline-variant/30 flex-shrink-0"><span class="material-symbols-outlined text-on-surface-variant/40 text-lg">spa</span></div>`;
+
+                             card.innerHTML = `
+                                 <div class="flex justify-between items-start border-b border-outline-variant/20 pb-3">
+                                     <div class="flex items-center gap-3">
+                                         ${imageHtml}
+                                         <div>
+                                             <strong class="text-primary font-mono text-sm cursor-pointer hover:underline" title="Click to Copy Batch Code" onclick="navigator.clipboard.writeText('${data.batchCode || cropId}'); alert('Copied Batch Code: ' + '${data.batchCode || cropId}')">Batch ${data.batchCode || cropId}</strong>
+                                             <div class="text-xs text-on-surface-variant/70 mt-1">${data.name || 'Unnamed crop'} (${data.variety || 'N/A'})</div>
+                                         </div>
+                                     </div>
+                                     <div class="flex flex-col items-end gap-1">
+                                         <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider ${getStatusBadgeClass(data.status)}">${data.status}</span>
+                                         <span class="text-[10px] text-yellow-400 font-mono font-semibold">${isUnassigned ? 'Unassigned' : 'Assigned to You'}</span>
+                                     </div>
+                                 </div>
+                                 
+                                 <div class="flex flex-col sm:flex-row gap-4 items-center justify-between pt-2">
+                                     <div class="text-xs text-on-surface-variant/70 leading-relaxed font-mono">
+                                         <div>Farmer ID: <span class="text-on-surface font-semibold">${data.farmerPublicId || 'N/A'}</span></div>
+                                         <div>Origin Location: <span class="text-on-surface font-semibold">${data.location || 'N/A'}</span></div>
+                                     </div>
+                                     <button onclick="acceptTransfer('${cropId}')" class="px-6 py-2.5 bg-primary text-on-primary font-bold rounded-lg hover:brightness-110 active:scale-[0.98] transition-all uppercase font-mono text-xs tracking-wider">
+                                         Accept Transfer & Start Transit
+                                     </button>
+                                 </div>
+                             `;
+                             transfersContainer.appendChild(card);
+                        } 
+                        // Active Shipments: assigned to me AND status is not 'Registered'
+                        else if (isAssigned && !isRegistered) {
+                            activeCount++;
+                            const card = document.createElement('div');
+                            card.className = 'bg-surface-container-low border border-outline-variant/40 p-6 rounded-xl space-y-4 hover:border-primary/20 transition-all';
+                            const imageHtml = data.imageUrl 
+                                 ? `<img src="${data.imageUrl}" class="w-12 h-12 object-cover rounded-lg border border-outline-variant/30 flex-shrink-0" alt="Crop Image">`
+                                 : `<div class="w-12 h-12 bg-surface-container-high rounded-lg flex items-center justify-center border border-outline-variant/30 flex-shrink-0"><span class="material-symbols-outlined text-on-surface-variant/40 text-lg">spa</span></div>`;
+
+                             card.innerHTML = `
+                                 <div class="flex justify-between items-start border-b border-outline-variant/20 pb-3">
+                                     <div class="flex items-center gap-3">
+                                         ${imageHtml}
+                                         <div>
+                                             <strong class="text-primary font-mono text-sm cursor-pointer hover:underline" title="Click to Copy Batch Code" onclick="navigator.clipboard.writeText('${data.batchCode || cropId}'); alert('Copied Batch Code: ' + '${data.batchCode || cropId}')">Batch ${data.batchCode || cropId}</strong>
+                                             <div class="text-xs text-on-surface-variant/70 mt-1">${data.name || 'Unnamed crop'} (${data.variety || 'N/A'})</div>
+                                         </div>
+                                     </div>
+                                     <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider ${getStatusBadgeClass(data.status)}">${data.status}</span>
+                                 </div>
+                                
+                                <form class="update-form space-y-4" data-id="${cropId}">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Current Location</label>
+                                            <input type="text" class="loc-input w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface placeholder:text-on-surface-variant/30 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all" value="${data.location || ''}" placeholder="Update Location" data-speech-key="distributor.shipmentLocation" data-speech="Enter the shipment's current location or coordinates.">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Update Status</label>
+                                            <select class="status-select w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all" data-speech-key="distributor.shipmentStatus" data-speech="Choose the current shipment status.">
+                                                <option value="Registered" ${data.status === 'Registered' ? 'selected' : ''}>Registered</option>
+                                                <option value="In Transit" ${data.status === 'In Transit' ? 'selected' : ''}>In Transit</option>
+                                                <option value="Stored" ${data.status === 'Stored' ? 'selected' : ''}>Stored</option>
+                                                <option value="Delivered" ${data.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Temp (C)</label>
+                                            <input type="number" class="temp-input w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface placeholder:text-on-surface-variant/30 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all" placeholder="22" data-speech-key="distributor.temperature" data-speech="Enter the current temperature in degrees Celsius.">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Humidity (%)</label>
+                                            <input type="number" class="hum-input w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface placeholder:text-on-surface-variant/30 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all" placeholder="45" data-speech-key="distributor.humidity" data-speech="Enter the current humidity percentage.">
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="w-full py-2.5 bg-primary text-on-primary font-bold rounded-lg hover:brightness-110 active:scale-[0.98] transition-all uppercase font-mono text-xs tracking-wider">UPDATE TRACKING</button>
+                                </form>
+                             `;
+                             shipmentsContainer.appendChild(card);
+                        }
+                    });
+
+                    if (transferCount === 0) {
+                        transfersContainer.innerHTML = '<p class="text-center text-on-surface-variant/50 py-8 font-mono text-sm">No incoming transfer requests found.</p>';
+                    }
+
+                    if (activeCount === 0) {
+                        shipmentsContainer.innerHTML = '<p class="text-center text-on-surface-variant/50 py-8 font-mono text-sm">No active shipments found.</p>';
+                    }
+
+                    // Re-attach event listeners after render
+                    document.querySelectorAll('.update-form').forEach(form => {
+                        form.addEventListener('submit', handleUpdate);
+                    });
+                    window.TraceCropVoicePrompts?.enhance(shipmentsContainer);
+
+                }, (error) => {
+                    console.error("Listener Error:", error);
+                    shipmentsContainer.innerHTML = '<p class="text-red-400 text-center py-8">Connection lost. ' + error.message + '</p>';
+                    transfersContainer.innerHTML = '<p class="text-red-400 text-center py-8">Connection lost. ' + error.message + '</p>';
+                });
+
+            } catch (error) {
+                console.error("Error setting up listener:", error);
+                shipmentsContainer.innerHTML = '<p class="text-red-400 text-center py-8">Error loading data.</p>';
+                transfersContainer.innerHTML = '<p class="text-red-400 text-center py-8">Error loading data.</p>';
+            }
+        }
+
+        window.acceptTransfer = async function(id) {
+            try {
+                const cropRef = doc(db, "crops", id);
+                await updateDoc(cropRef, {
+                    distributorId: auth.currentUser.uid,
+                    distributorPublicId: currentUserPublicId,
+                    status: "In Transit",
+                    lastUpdated: new Date().toISOString()
+                });
+                alert('Transfer accepted and shipment is now In Transit!');
+            } catch (error) {
+                console.error("Error accepting transfer:", error);
+                alert("Failed to accept transfer: " + error.message);
+            }
+        }
+
+        function getStatusBadgeClass(status) {
+            if (status === 'Delivered') return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+            if (status === 'In Transit') return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
+            return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+        }
+
+        async function handleUpdate(e) {
+            e.preventDefault();
+            const form = e.target;
+            const id = form.getAttribute('data-id');
+            const status = form.querySelector('.status-select').value;
+            const location = form.querySelector('.loc-input').value;
+            const btn = form.querySelector('button[type="submit"]');
+            
+            btn.innerText = 'Updating...';
+            
+            try {
+                const cropRef = doc(db, "crops", id);
+                await updateDoc(cropRef, {
+                    status: status,
+                    location: location,
+                    lastUpdated: new Date().toISOString()
+                });
+                
+                alert('Shipment updated!');
+                btn.innerText = 'UPDATE TRACKING';
+            } catch (error) {
+                console.error("Error updating:", error);
+                alert("Update failed: " + error.message);
+                btn.innerText = 'UPDATE TRACKING';
+            }
+        }
+
+        // Debug Helper
+        window.debugCheck = async function() {
+            alert("Starting Debug Scan... Please wait.");
+            const log = document.getElementById('debug-log');
+            log.style.display = 'block';
+            log.innerHTML = "Scanning DB...<br>";
+            
+            try {
+                const myId = auth.currentUser.uid;
+                log.innerHTML += `My User ID: <b>${myId}</b><br>------------------------<br>`;
+                
+                const q = query(collection(db, "crops"), limit(10));
+                const snaps = await getDocs(q);
+                
+                if (snaps.empty) {
+                    log.innerHTML += "Database is EMPTY. No crops found.";
+                    alert("Database is empty!");
                     return;
                 }
 
-                querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const cropId = docSnap.id;
+                snaps.forEach(d => {
+                    const data = d.data();
+                    const assigned = data.distributorId;
+                    const match = assigned === myId ? "MATCH" : "MISMATCH";
                     
-                    const card = document.createElement('div');
-                    card.className = 'shipment-card';
-                    card.innerHTML = `
-                        <div class="shipment-header">
-                            <div>
-                                <strong style="cursor: pointer;" title="Click to Copy Full ID" onclick="navigator.clipboard.writeText('${cropId}'); alert('Copied Batch ID: ' + '${cropId}')">Batch #${cropId} 📋</strong><br>
-                                <span style="font-size: 12px; color: #bbb;">${data.name} - ${data.variety}</span>
-                            </div>
-                            <span class="status-badge" style="background: ${getStatusColor(data.status)}">${data.status}</span>
-                        </div>
-                        
-                        <form class="update-form" data-id="${cropId}">
-                            <div class="grid-form">
-                                <div>
-                                    <label>Current Location</label>
-                                    <input type="text" class="loc-input" value="${data.location || ''}" placeholder="Update Location">
-                                </div>
-                                <div>
-                                    <label>Update Status</label>
-                                    <select class="status-select">
-                                        <option value="Registered" ${data.status === 'Registered' ? 'selected' : ''}>Registered</option>
-                                        <option value="In Transit" ${data.status === 'In Transit' ? 'selected' : ''}>In Transit</option>
-                                        <option value="Stored" ${data.status === 'Stored' ? 'selected' : ''}>Stored</option>
-                                        <option value="Delivered" ${data.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Temp (°C)</label>
-                                    <input type="number" class="temp-input" placeholder="22">
-                                </div>
-                                <div>
-                                    <label>Humidity (%)</label>
-                                    <input type="number" class="hum-input" placeholder="45">
-                                </div>
-                            </div>
-                            <button type="submit" class="action-btn">UPDATE TRACKING</button>
-                        </form>
-                    `;
-                    container.appendChild(card);
+                    log.innerHTML += `Batch ...${d.id.slice(-4)}: Assigned [${assigned}] (${match})<br>`;
                 });
-
-                // Re-attach event listeners after render
-                document.querySelectorAll('.update-form').forEach(form => {
-                    form.addEventListener('submit', handleUpdate);
-                });
-
-            }, (error) => {
-                console.error("Listener Error:", error);
-                container.innerHTML = '<p style="color: red; text-align: center;">Connection lost. ' + error.message + '</p>';
-            });
-
-        } catch (error) {
-            console.error("Error setting up listener:", error);
-            container.innerHTML = '<p style="color: red; text-align: center;">Error loading data.</p>';
-        }
-    }
-
-    function getStatusColor(status) {
-        if(status === 'Delivered') return '#4caf50';
-        if(status === 'In Transit') return '#ffa726';
-        return '#ddd';
-    }
-
-    async function handleUpdate(e) {
-        e.preventDefault();
-        const form = e.target;
-        const id = form.getAttribute('data-id');
-        const status = form.querySelector('.status-select').value;
-        const location = form.querySelector('.loc-input').value;
-        const btn = form.querySelector('button');
-        
-        btn.innerText = 'Updating...';
-        
-        try {
-            const cropRef = doc(db, "crops", id);
-            await updateDoc(cropRef, {
-                status: status,
-                location: location,
-                lastUpdated: new Date().toISOString()
-            });
-            
-            alert('Shipment updated!');
-            btn.innerText = 'UPDATE TRACKING';
-        } catch (error) {
-            console.error("Error updating:", error);
-            alert("Update failed: " + error.message);
-            btn.innerText = 'UPDATE TRACKING';
-        }
-    }
-
-    // Debug Helper
-    window.debugCheck = async function() {
-        alert("Starting Debug Scan... Please wait.");
-        const log = document.getElementById('debug-log');
-        log.style.display = 'block';
-        log.innerHTML = "Scanning DB...<br>";
-        
-        try {
-            const myId = auth.currentUser.uid;
-            log.innerHTML += `My User ID: <b>${myId}</b><br>------------------------<br>`;
-            
-            const q = query(collection(db, "crops"), limit(10));
-            const snaps = await getDocs(q);
-            
-            if (snaps.empty) {
-                log.innerHTML += "Database is EMPTY. No crops found.";
-                alert("Database is empty!");
-                return;
-            }
-
-            snaps.forEach(d => {
-                const data = d.data();
-                const assigned = data.distributorId;
-                const match = assigned === myId ? "✅ MATCH" : "❌ MISMATCH";
                 
-                log.innerHTML += `Batch ...${d.id.slice(-4)}: Assigned [${assigned}] (${match})<br>`;
-            });
-            
-            alert("Scan Complete! Check the yellow text below the button.");
+                alert("Scan Complete! Check the yellow text below the button.");
 
-        } catch (e) {
-            console.error(e);
-            log.innerText = "Debug Error: " + e.message;
-            alert("Error: " + e.message);
-        }
-    };
+            } catch (e) {
+                console.error(e);
+                log.innerText = "Debug Error: " + e.message;
+                alert("Error: " + e.message);
+            }
+        };
+    </script>
 
 
+    <!-- Floating Language Selector -->
+    <div class="language-control fixed bottom-6 left-6 z-50" aria-label="Page language selector">
+        <span class="material-symbols-outlined" aria-hidden="true">translate</span>
+        <div id="google_translate_element"></div>
+    </div>
 
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+}
 </script>
-
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
+
 </html>

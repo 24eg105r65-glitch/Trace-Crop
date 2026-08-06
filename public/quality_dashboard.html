@@ -1,398 +1,455 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Quality Audit | TraceCrop</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quality Auditor Dashboard | TraceCrop</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: "#051424",
+                        surface: "#051424",
+                        primary: "#4edea3",
+                        "primary-container": "#10b981",
+                        "on-primary": "#003824",
+                        "on-primary-container": "#00422b",
+                        "surface-container": "#122131",
+                        "surface-container-high": "#1c2d3d",
+                        "surface-container-low": "#0b1520",
+                        "outline-variant": "#2d3c4c",
+                        "on-surface": "#d4e4fa",
+                        "on-surface-variant": "#9cb0cc"
+                    },
+                    fontFamily: {
+                        sans: ["Hanken Grotesk", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        .dashboard-container {
-            max-width: 900px;
-            width: 100%;
-            margin: 40px auto;
-        }
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        .dashboard-header h2 {
-            margin: 0;
-            font-size: 24px;
-        }
-         .logout-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            width: auto;
-            font-size: 14px;
-        }
-        .logout-btn:hover {
-            background: rgba(255, 80, 80, 0.8);
-        }
-        .audit-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 15px; /* Reduced padding */
-            border-radius: 8px;
-            margin-bottom: 10px; /* Reduced margin */
-        }
-        .audit-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center; /* Better alignment */
-            margin-bottom: 10px; /* Reduced margin */
-        }
-        .batch-info h4 {
-            margin: 0 0 2px 0;
-            font-size: 16px; /* Slightly smaller */
-        }
-        .batch-info p {
-            margin: 0;
-            color: #aaa;
-            font-size: 12px;
-        }
-        .grade-options {
-            display: flex;
-            gap: 5px; /* Tighter gap */
-            margin-bottom: 10px;
-        }
-        .grade-btn {
-            flex: 1;
-            padding: 6px; /* Smaller button padding */
-            font-size: 12px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #fff;
-            cursor: pointer;
-            border-radius: 4px;
-            text-align: center;
-        }
-        .grade-btn:hover, .grade-btn.selected {
-            background: #4caf50;
-            border-color: #4caf50;
-        }
-        .grade-btn.reject:hover {
-            background: #f44336;
-            border-color: #f44336;
-        }
-        textarea {
-            width: 100%;
-            padding: 8px; /* Tighter padding */
-            border-radius: 4px;
-            border: none;
-            background: #f0f0f0;
-            color: #333;
-            min-height: 50px; /* Reduced height */
-            margin-bottom: 10px;
-            font-size: 13px;
-        }
-        .submit-btn {
-            width: 100%;
-            background: #2196f3;
-            color: white;
-            border: none;
-            padding: 10px; /* Reduced button size */
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .submit-btn:hover {
-            background: #1976d2;
-        }
-    </style>
-    <style>
-        /* FIX SCROLLING ISSUE */
         body {
-            height: auto !important;
-            min-height: 100vh;
-            padding-bottom: 50px;
-            align-items: flex-start !important;
-            padding-top: 50px;
+            background-color: #051424;
+            color: #d4e4fa;
+            background-image: url("bg-map.jpg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
-
-        .dashboard-container {
-            max-width: 900px;
-            width: 100%;
-            margin: 0 auto;
+        .emerald-glow {
+            box-shadow: 0 0 15px 2px rgba(16, 185, 129, 0.15);
         }
-        
-        .audit-card {
-            background: rgba(255, 255, 255, 0.05);
+        .emerald-btn-glow:hover {
+            box-shadow: 0 0 20px 4px rgba(78, 222, 163, 0.35);
+        }
+        select option {
+            background-color: #122131;
+            color: #d4e4fa;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 15px; 
-            border-radius: 8px;
-            margin-bottom: 10px; 
-            display: block;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
         }
-        
-        /* ... existing styles ... */
-        .dashboard-header {
+        .language-control {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            gap: 0.6rem;
+            min-height: 2.75rem;
+            padding: 0.35rem 0.65rem 0.35rem 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(78, 222, 163, 0.24);
+            background: rgba(18, 33, 49, 0.86);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+        }
+        .language-control .material-symbols-outlined {
+            color: #4edea3;
+            font-size: 1.25rem;
+        }
+        .language-control-label {
+            display: block;
+            margin-bottom: 0.15rem;
+            color: #9cb0cc;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+        #google_translate_element {
+            display: inline-block;
+        }
+        .goog-te-gadget {
+            font-family: 'Hanken Grotesk', sans-serif !important;
+            font-size: 0 !important;
+            color: transparent !important;
+        }
+        .goog-te-gadget .goog-logo-link {
+            display: none !important;
+        }
+        .goog-te-gadget select.goog-te-combo {
+            background: transparent !important;
+            color: #4edea3 !important;
+            border: none !important;
+            font-family: 'Hanken Grotesk', sans-serif !important;
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            outline: none !important;
+            cursor: pointer !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .goog-te-combo option {
+            background-color: #122131 !important;
+            color: #d4e4fa !important;
+            font-family: 'Hanken Grotesk', sans-serif !important;
+        }
+        iframe.skiptranslate,
+        .goog-te-banner-frame {
+            display: none !important;
+        }
+        body {
+            top: 0px !important;
+        }
+        @media (max-width: 760px) {
+            .language-control {
+                gap: 0.45rem;
+                padding: 0.35rem 0.5rem;
+            }
+            .language-control-label {
+                display: none;
+            }
+        }
+        @keyframes auditToastIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        @keyframes auditToastOut {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(12px) scale(0.98);
+            }
+        }
+        @keyframes auditPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(78, 222, 163, 0.35);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(78, 222, 163, 0);
+            }
+        }
+        .audit-toast-enter {
+            animation: auditToastIn 260ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
+        .audit-toast-exit {
+            animation: auditToastOut 220ms ease-in forwards;
+        }
+        .audit-toast-icon {
+            animation: auditPulse 1200ms ease-out infinite;
         }
     </style>
+    <script src="notifications.js?v=4"></script>
 </head>
-<body>
+<body class="min-h-screen pb-12 pt-24 font-sans selection:bg-primary selection:text-on-primary bg-slate-950/40">
 
-<div class="container dashboard-container">
-    <div class="card">
-        <div id="google_translate_element" style="margin-bottom: 20px; text-align: right;"></div>
-        <div class="dashboard-header">
-            <h2>✓ Quality Auditor Dashboard</h2>
-            <div style="text-align: right;">
-                <div id="my-id-display" style="font-size: 11px; color: #888; margin-bottom: 5px;">ID: Loading...</div>
-                <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
+    <!-- Top Navigation Bar -->
+    <nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-4 bg-background/85 backdrop-blur-xl border-b border-outline-variant">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+            <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">dataset</span>
+            <span class="text-xl font-bold text-on-surface">TraceCrop</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="text-right">
+                <div id="my-id-display" class="font-mono text-xs text-on-surface-variant cursor-pointer hover:text-primary transition-colors border-b border-dotted border-outline-variant pb-0.5">
+                    ID: Loading...
+                </div>
             </div>
+            <button onclick="window.location.href='index.html'" 
+                    class="px-4 py-2 rounded-lg bg-surface-container-high hover:bg-red-500/20 hover:text-red-400 border border-outline-variant hover:border-red-500/30 text-sm font-medium transition-all">
+                Logout
+            </button>
         </div>
+    </nav>
 
-        <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-            <input type="text" id="batchSearchInput" placeholder="Enter Batch ID (e.g. FWL1YX7D)" 
-                   style="flex: 1; padding: 12px; border-radius: 4px; border: none; background: rgba(255,255,255,0.9); color: #000;"
-                   onkeyup="if(event.key === 'Enter') searchBatch()">
-            <button onclick="searchBatch()" style="width: auto; padding: 12px 24px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">SEARCH</button>
-            <button onclick="document.getElementById('batchSearchInput').value=''; searchBatch()" style="width: auto; padding: 12px 15px; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 4px; cursor: pointer;">CLEAR</button>
-        </div>
-
-        <div id="audit-container">
-            <p style="text-align: center; color: #aaa; margin-top: 50px;">Ready to Audit.<br>Enter a Batch ID above to fetch crop details.</p>
-        </div>
-
-        <!-- Debug Section Hidden -->
-        <div style="display: none;">
-            <div id="debug-log"></div>
-        </div>
-    </div>
-</div>
-
-<script type="module">
-    import { auth, db, onAuthStateChanged, collection, query, where, getDocs, updateDoc, doc } from './firebase-config.js?v=2';
-
-    // Check auth
-    onAuthStateChanged(auth, (user) => {
-        if (!user) {
-            window.location.href = 'login.html';
-        } else {
-            // Show short ID, copy full on click
-            const shortId = user.uid.slice(0, 6) + '...';
-            const display = document.getElementById('my-id-display');
-            display.innerHTML = `ID: <span style="cursor: pointer; border-bottom: 1px dotted #ccc;" title="Click to Copy Full ID">${shortId} 📋</span>`;
-            display.onclick = () => {
-                navigator.clipboard.writeText(user.uid);
-                alert("Full User ID copied to clipboard!");
-            };
-        }
-    });
-
-    const container = document.getElementById('audit-container');
-
-
-
-    function getGradeColor(grade) {
-        if(grade === 'Grade A') return '#4caf50'; // Green
-        if(grade === 'Grade B') return '#cddc39'; // Lime
-        if(grade === 'Grade C') return '#ffc107'; // Amber
-        if(grade === 'REJECTED') return '#f44336'; // Red
-        return '#ffeb3b'; // Yellow (Pending)
-    }
-
-    async function handleAuditSubmit(e) {
-        e.preventDefault();
-        const form = e.target;
-        const id = form.getAttribute('data-id');
-        const grade = form.querySelector('.selected-grade').value;
-        const notes = form.querySelector('.audit-notes').value;
-        const btn = form.querySelector('button[type="submit"]');
-
-        if(!grade) {
-            alert("Please select a grade.");
-            return;
-        }
-
-        btn.innerText = 'Submitting...';
-        btn.disabled = true;
-
-        try {
-            await updateDoc(doc(db, "crops", id), {
-                qualityGrade: grade,
-                auditNotes: notes,
-                auditedBy: auth.currentUser ? auth.currentUser.uid : 'anonymous',
-                auditedAt: new Date().toISOString()
-            });
-            
-            alert('Audit Report Submitted!');
-            // Refresh result but keep search term if any
-            searchBatch(); 
-        } catch (error) {
-             console.error("Error submitting audit:", error);
-             alert("Error: " + error.message);
-             btn.innerText = 'SUBMIT AUDIT REPORT';
-             btn.disabled = false;
-        }
-    }
-
-    // Expose search function globally
-    window.searchBatch = function() {
-        const input = document.getElementById('batchSearchInput').value.trim().toUpperCase();
-        loadBatches(input);
-    };
-
-    // Expose debug function
-    window.debugCheck = async function() {
-        const log = document.getElementById('debug-log');
-        log.style.display = 'block';
-        log.innerHTML = "Scanning Database...<br>";
+    <main class="max-w-4xl mx-auto px-4 space-y-8 z-10 relative">
         
-        try {
-            const uid = auth.currentUser ? auth.currentUser.uid : 'No User Logged In (This is OK for reading)';
-            log.innerHTML += `My User ID: <b>${uid}</b><br>------------------------<br>`;
+        <!-- Main section card -->
+        <div class="bg-surface-container/85 backdrop-blur-md border border-outline-variant/60 rounded-2xl p-8 shadow-2xl space-y-8">
             
-            const q = query(collection(db, "crops"), limit(10));
-            const snaps = await getDocs(q);
-            
-            if (snaps.empty) {
-                log.innerHTML += "Database is EMPTY. No crops exist at all.";
-                return;
-            }
+            <div class="border-b border-outline-variant/30 pb-6">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary text-3xl">verified</span>
+                    <h2 class="text-2xl font-bold tracking-wide uppercase">Quality Auditor Dashboard</h2>
+                </div>
+                <p class="text-sm text-on-surface-variant mt-2">Inspect newly harvested batches, verify certifications, upload lab reports, and sign off with quality grades.</p>
+            </div>
 
-            snaps.forEach(d => {
-                const data = d.data();
-                log.innerHTML += `Batch ...${d.id.slice(-4)}: Status=[${data.status}] Grade=[${data.qualityGrade}]<br>`;
-            });
+            <div>
+                <h3 class="text-lg font-bold text-primary font-sans mb-4">Pending Inspections</h3>
+                <p class="text-sm text-on-surface-variant mb-6">List of batches registered on-chain awaiting verification.</p>
 
-        } catch (e) {
-            log.innerText = "Debug Error: " + e.message;
-        }
-    };
-
-    async function loadBatches(searchId = null) {
-        const container = document.getElementById('audit-container');
-        
-        if (!searchId) {
-            container.innerHTML = '<p style="text-align: center; color: #aaa; margin-top: 50px;">Please enter a Batch ID to search.</p>';
-            return;
-        }
-
-        const normalizedSearchId = searchId.toUpperCase();
-        console.log("Searching for:", normalizedSearchId);
-        container.innerHTML = '<p style="text-align: center; color: #aaa;">Fetching from Blockchain...</p>';
-        
-        try {
-            // Note: In production, use server-side filtering. For demo, we fetch and filter.
-            const querySnapshot = await getDocs(collection(db, "crops"));
-            console.log("Docs scanned:", querySnapshot.size);
-            
-            container.innerHTML = '';
-            
-            if (querySnapshot.empty) {
-                container.innerHTML = '<p style="text-align: center; color: #aaa;">No batches found.</p>';
-                return;
-            }
-
-            let foundCount = 0;
-
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const id = docSnap.id;
+                <div class="mb-6">
+                    <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-2">Search Batches</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/45 text-xl">search</span>
+                        <input id="batchSearchInput" type="search" placeholder="Search batch ID or crop name"
+                               class="w-full pl-11 pr-4 py-3 rounded-lg border border-outline-variant/50 bg-background text-on-surface placeholder:text-on-surface-variant/35 text-sm font-mono focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                    </div>
+                </div>
                 
-                // Case-insensitive matching
-                if (normalizedSearchId && !id.toUpperCase().includes(normalizedSearchId)) {
-                    return; 
+                <div id="crops-container" class="space-y-6">
+                    <p class="text-center text-on-surface-variant/60 py-8 font-mono text-sm">Loading pending batches...</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="audit-toast-container" class="fixed bottom-6 right-6 z-[4000] pointer-events-none"></div>
+
+    <script type="module">
+        import { auth, db, onAuthStateChanged, collection, updateDoc, doc, onSnapshot, getDoc, setDoc, generatePublicId, normalizeFriendlyId } from './firebase-config.js?v=3';
+
+        let latestCropsSnapshot = null;
+        let batchSearchTerm = '';
+
+        const batchSearchInput = document.getElementById('batchSearchInput');
+        if (batchSearchInput) {
+            batchSearchInput.addEventListener('input', () => {
+                batchSearchTerm = normalizeFriendlyId(batchSearchInput.value);
+                renderCrops();
+            });
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+            } else {
+                const display = document.getElementById('my-id-display');
+                const profileSnap = await getDoc(doc(db, "users", user.uid));
+                if (profileSnap.exists()) {
+                    const profile = profileSnap.data();
+                    const publicId = profile.publicId || generatePublicId(profile.role);
+                    if (!profile.publicId) {
+                        await setDoc(doc(db, "users", user.uid), { publicId: publicId }, { merge: true });
+                    }
+                    display.innerHTML = `ID: <span class="font-bold text-primary">${publicId}</span>`;
+                    display.onclick = () => navigator.clipboard.writeText(publicId);
+                }
+                
+                loadCrops();
+            }
+        });
+
+        async function loadCrops() {
+            const container = document.getElementById('crops-container');
+            container.innerHTML = '<p class="text-center text-on-surface-variant/60 py-8 font-mono text-sm">Listening for crops...</p>';
+            
+            try {
+                // Real-time snapshot listener on the entire crops collection
+                onSnapshot(collection(db, "crops"), (querySnapshot) => {
+                    latestCropsSnapshot = querySnapshot;
+                    renderCrops();
+                });
+
+            } catch (error) {
+                console.error("Error setting up real-time listener:", error);
+                container.innerHTML = '<p class="text-red-400 text-center py-8">Error loading data.</p>';
+            }
+        }
+
+        function renderCrops() {
+            const container = document.getElementById('crops-container');
+            if (!latestCropsSnapshot) return;
+
+            container.innerHTML = '';
+
+            if (latestCropsSnapshot.empty) {
+                container.innerHTML = '<p class="text-center text-on-surface-variant/50 py-8 font-mono text-sm">No crops found in database.</p>';
+                return;
+            }
+
+            let renderedCount = 0;
+
+            latestCropsSnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const cropId = docSnap.id;
+                const batchCode = data.batchCode || cropId;
+
+                if (batchSearchTerm) {
+                    const normalizedBatch = normalizeFriendlyId(batchCode);
+                    const normalizedDocId = normalizeFriendlyId(cropId);
+                    const normalizedName = normalizeFriendlyId(data.name);
+                    const normalizedVariety = normalizeFriendlyId(data.variety);
+                    if (
+                        !normalizedBatch.includes(batchSearchTerm) &&
+                        !normalizedDocId.includes(batchSearchTerm) &&
+                        !normalizedName.includes(batchSearchTerm) &&
+                        !normalizedVariety.includes(batchSearchTerm)
+                    ) {
+                        return;
+                    }
                 }
 
-                foundCount++;
+                renderedCount++;
+                        
+                        const card = document.createElement('div');
+                        card.className = 'bg-surface-container-low border border-outline-variant/40 p-6 rounded-xl space-y-4 hover:border-primary/20 transition-all';
+                        
+                        const imageHtml = data.imageUrl 
+                             ? `<img src="${data.imageUrl}" class="w-12 h-12 object-cover rounded-lg border border-outline-variant/30 flex-shrink-0" alt="Crop Image">`
+                             : `<div class="w-12 h-12 bg-surface-container-high rounded-lg flex items-center justify-center border border-outline-variant/30 flex-shrink-0"><span class="material-symbols-outlined text-on-surface-variant/40 text-lg">spa</span></div>`;
 
-                const card = document.createElement('div');
-                card.className = 'audit-card';
-                // Force visibility
-                card.style.display = 'block';
-                card.style.border = '1px solid rgba(255,255,255,0.1)';
-                
-                card.innerHTML = `
-                    <div class="audit-header">
-                        <div class="batch-info">
-                            <h4>Batch #${id.slice(0, 8).toUpperCase()}</h4>
-                            <p>${data.name} - Location: ${data.location}</p>
-                            <p style="color: #4caf50; font-weight: bold; font-size: 11px;">Status: ${data.status}</p>
-                        </div>
-                        <div style="background: ${getGradeColor(data.qualityGrade)}; color: #000; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px;">${data.qualityGrade || 'PENDING'}</div>
-                    </div>
-
-                    <form class="audit-form" data-id="${id}" data-existing-report="${data.reportUrl || ''}">
-                        <label style="color: #fff; margin-bottom: 10px; display: block;">Assign Quality Grade</label>
-                        <div class="grade-options">
-                            <div class="grade-btn" data-value="Grade A">Grade A</div>
-                            <div class="grade-btn" data-value="Grade B">Grade B</div>
-                            <div class="grade-btn" data-value="Grade C">Grade C</div>
-                            <div class="grade-btn reject" data-value="REJECTED">REJECT</div>
-                        </div>
-                        <input type="hidden" class="selected-grade" value="">
-
-                        <label style="color: #fff; margin-bottom: 10px; display: block;">Audit Comments / Lab Results</label>
-                        <textarea class="audit-notes" placeholder="Enter protein content, moisture levels, or rejection reasons...">${data.auditNotes || ''}</textarea>
-
-
-
-                        <button type="submit" class="submit-btn" style="background: #2196f3;">SUBMIT AUDIT REPORT</button>
-                    </form>
-                `;
-                container.appendChild(card);
+                        card.innerHTML = `
+                            <div class="flex justify-between items-start border-b border-outline-variant/20 pb-3">
+                                <div class="flex items-center gap-3">
+                                    ${imageHtml}
+                                    <div>
+                                        <strong class="text-primary font-mono text-sm cursor-pointer hover:underline" title="Click to Copy Batch Code" onclick="navigator.clipboard.writeText('${batchCode}'); alert('Copied Batch Code: ' + '${batchCode}')">Batch ${batchCode}</strong>
+                                        <div class="text-xs text-on-surface-variant/70 mt-1">${data.name || 'Unnamed crop'} (${data.variety || 'N/A'})</div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${getGradeBadgeClass(data.qualityGrade)}">Grade: ${data.qualityGrade || 'Pending'}</span>
+                                    <span class="text-[10px] font-mono text-on-surface-variant/55">Status: ${data.status}</span>
+                                </div>
+                            </div>
+                            
+                            <form class="audit-form space-y-4" data-id="${cropId}">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Quality Grade</label>
+                                        <select class="grade-select w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                                            <option value="Pending" ${data.qualityGrade === 'Pending' ? 'selected' : ''}>Pending</option>
+                                            <option value="GRADE A" ${data.qualityGrade === 'GRADE A' ? 'selected' : ''}>GRADE A</option>
+                                            <option value="GRADE B" ${data.qualityGrade === 'GRADE B' ? 'selected' : ''}>GRADE B</option>
+                                            <option value="REJECTED" ${data.qualityGrade === 'REJECTED' ? 'selected' : ''}>REJECTED</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Audit Notes</label>
+                                        <input type="text" class="notes-input w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface placeholder:text-on-surface-variant/30 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all" value="${data.auditNotes || ''}" placeholder="Certified Organic, premium batch">
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Lab Report Link (URL)</label>
+                                        <input type="url" class="report-input w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface placeholder:text-on-surface-variant/30 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all" value="${data.reportUrl || ''}" placeholder="https://reports.lab.org/inspect-129">
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full py-2.5 bg-primary text-on-primary font-bold rounded-lg hover:brightness-110 active:scale-[0.98] transition-all uppercase font-mono text-xs tracking-wider">SUBMIT AUDIT</button>
+                            </form>
+                        `;
+                        container.appendChild(card);
             });
 
-            if (foundCount === 0) {
-                 container.innerHTML = '<p style="text-align: center; color: #aaa;">No matching crop found.</p>';
+            if (renderedCount === 0) {
+                container.innerHTML = '<p class="text-center text-on-surface-variant/50 py-8 font-mono text-sm">No batch or crop found for that search.</p>';
+                return;
             }
 
-            // Re-attach listeners
-            attachListeners();
-
-        } catch (error) {
-            console.error("Error loading batches:", error);
-            container.innerHTML = '<p style="color: red; text-align: center;">Error loading batches.</p>';
-        }
-    }
-
-    function attachListeners() {
-        // 1. Grade Selection
-        document.querySelectorAll('.grade-options').forEach(group => {
-            group.querySelectorAll('.grade-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    group.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('selected'));
-                    this.classList.add('selected');
-                    group.parentElement.querySelector('.selected-grade').value = this.getAttribute('data-value');
-                    
-                    const submitBtn = group.parentElement.querySelector('.submit-btn');
-                    if (this.getAttribute('data-value') === 'REJECTED') {
-                            submitBtn.style.backgroundColor = '#f44336';
-                            submitBtn.innerText = 'REJECT BATCH';
-                    } else {
-                            submitBtn.style.backgroundColor = '#4caf50';
-                            submitBtn.innerText = 'APPROVE & SUBMIT';
-                    }
-                });
+            document.querySelectorAll('.audit-form').forEach(form => {
+                form.addEventListener('submit', handleAudit);
             });
-        });
+        }
 
-        // 2. Form Submission
-        document.querySelectorAll('.audit-form').forEach(form => {
-            form.addEventListener('submit', handleAuditSubmit);
-        });
-    }
+        function getGradeBadgeClass(grade) {
+            if (grade === 'GRADE A') return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+            if (grade === 'GRADE B') return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
+            if (grade === 'REJECTED') return 'bg-red-500/10 text-red-400 border border-red-500/20';
+            return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+        }
+
+        function showAuditSuccessToast(batchLabel) {
+            const container = document.getElementById('audit-toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'audit-toast-enter pointer-events-auto w-[min(360px,calc(100vw-32px))] bg-surface-container border border-primary/35 rounded-xl shadow-2xl shadow-black/40 p-4 flex items-center gap-3';
+            toast.innerHTML = `
+                <div class="audit-toast-icon w-11 h-11 rounded-full bg-primary/15 border border-primary/40 flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-primary text-2xl">verified</span>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-sm font-bold text-on-surface">Audit signed onto blockchain</div>
+                    <div class="text-xs font-mono text-on-surface-variant/75 truncate">${batchLabel}</div>
+                </div>
+            `;
+
+            container.innerHTML = '';
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('audit-toast-enter');
+                toast.classList.add('audit-toast-exit');
+                toast.addEventListener('animationend', () => toast.remove(), { once: true });
+            }, 2800);
+        }
+
+        async function handleAudit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const id = form.getAttribute('data-id');
+            const grade = form.querySelector('.grade-select').value;
+            const notes = form.querySelector('.notes-input').value;
+            const report = form.querySelector('.report-input').value;
+            const btn = form.querySelector('button');
+            
+            btn.innerText = 'Submitting Audit...';
+            
+            try {
+                const cropRef = doc(db, "crops", id);
+                await updateDoc(cropRef, {
+                    qualityGrade: grade,
+                    auditNotes: notes,
+                    reportUrl: report,
+                    auditedAt: new Date().toISOString()
+                });
+                
+                const batchLabel = form.closest('.bg-surface-container-low')?.querySelector('strong')?.innerText || 'Audit completed';
+                showAuditSuccessToast(batchLabel);
+                btn.innerText = 'SUBMIT AUDIT';
+            } catch (error) {
+                console.error(error);
+                alert("Audit submission failed: " + error.message);
+                btn.innerText = 'SUBMIT AUDIT';
+            }
+        }
+    </script>
 
 
-</script>
+    <!-- Floating Language Selector -->
+    <div class="language-control fixed bottom-6 left-6 z-50" aria-label="Page language selector">
+        <span class="material-symbols-outlined" aria-hidden="true">translate</span>
+        <div id="google_translate_element"></div>
+    </div>
 
 <script type="text/javascript">
 function googleTranslateElementInit() {
   new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
 }
 </script>
-<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
+
 </html>
-                  

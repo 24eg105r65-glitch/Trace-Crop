@@ -1,384 +1,640 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Farmer Dashboard | TraceCrop</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        /* Specific dashboard styles over style.css */
-        .dashboard-container {
-            max-width: 800px;
-            width: 100%;
-            margin: 40px auto;
-        }
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        .dashboard-header h2 {
-            margin: 0;
-            font-size: 24px;
-        }
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            width: auto;
-            font-size: 14px;
-        }
-        .logout-btn:hover {
-            background: rgba(255, 80, 80, 0.8);
-        }
-        .grid-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .full-width {
-            grid-column: span 2;
-        }
-        textarea {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            border: none;
-            background: #f5f5f5;
-            color: #000;
-            resize: vertical;
-            min-height: 80px;
-            font-family: inherit;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: #ccc;
-        }
-
-        /* Success Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
-        .modal-content {
-            background: #1e1e1e;
-            padding: 30px;
-            border-radius: 12px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-            border: 1px solid #333;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            animation: scaleIn 0.3s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    </style>
-</head>
-<body>
-
-<div class="container dashboard-container">
-    <div class="card">
-        <div id="google_translate_element" style="margin-bottom: 20px; text-align: right;"></div>
-        <div class="dashboard-header">
-            <h2>🌾 Farmer Dashboard</h2>
-            <div style="text-align: right;">
-                <div id="my-id-display" style="font-size: 11px; color: #888; margin-bottom: 5px;">ID: Loading...</div>
-                <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
-            </div>
-        </div>
-
-        <div id="profile-status" style="background: rgba(255,193,7,0.1); border: 1px solid #ffc107; padding: 10px; border-radius: 6px; margin-bottom: 25px; display: none; align-items: center; gap: 10px;">
-            <span style="font-size: 20px;">ℹ️</span>
-            <div>
-                <div style="font-weight: bold; color: #ffc107;">Profile Verification</div>
-                <div id="role-display-text" style="font-size: 13px; color: #ddd;">Checking account role...</div>
-            </div>
-        </div>
-
-        <h3>Register New Crop</h3>
-        <p style="color: #aaa; margin-bottom: 20px; font-size: 14px;">Enter details to track your fresh produce on the blockchain.</p>
-
-        <form id="cropForm">
-            <div class="grid-form">
-                <div>
-                    <label>Crop Name</label>
-                    <input type="text" id="cropName" placeholder="e.g. Wheat, Tomato" required>
-                </div>
-                <div>
-                    <label>Crop Variety/Type</label>
-                    <input type="text" id="cropVariety" placeholder="e.g. Organic, Hybrid" required>
-                </div>
-                
-                <div>
-                    <label>Sowing Date</label>
-                    <input type="date" id="sowingDate" required>
-                </div>
-
-
-                <div class="full-width">
-                    <label>Farm Location / Land ID</label>
-                    <input type="text" id="farmLocation" placeholder="Enter Farm ID or Location Coordinates" required>
-                </div>
-
-                <div class="full-width">
-                    <label>Fertilizers Used (Optional)</label>
-                    <textarea id="fertilizers" placeholder="List any fertilizers or pesticides used..."></textarea>
-                </div>
-                
-                <div class="full-width">
-                    <label>Transfer to Distributor (Enter Distributor ID)</label>
-                    <input type="text" id="distributorId" placeholder="Optional: Enter Distributor User ID">
-                </div>
-                
-                <div class="full-width">
-                    <label>Upload Crop Image</label>
-                    <input type="file" style="padding: 10px; background: rgba(255,255,255,0.1); color: #fff;">
-                </div>
-            </div>
-
-            <button type="submit" style="margin-top: 20px;">REGISTER CROP TO BLOCKCHAIN</button>
-        </form>
-
-        <hr style="margin: 40px 0; border: 0; border-top: 1px solid rgba(255,255,255,0.1);">
-
-        <h3>My Registered Crops</h3>
-        <div id="my-crops-container">
-            <p style="text-align: center; color: #aaa;">Loading your crops...</p>
-        </div>
-
-        <!-- Debug Section -->
-        <div style="margin-top: 40px; border-top: 1px dashed #555; padding-top: 20px;">
-            <button onclick="debugCheck()" style="font-size: 11px; background: #333; color: #aaa; border: none; padding: 5px 10px; cursor: pointer;">Show Debug Info (Why is my list empty?)</button>
-            <div id="debug-log" style="font-family: monospace; font-size: 11px; color: yellow; margin-top: 10px; background: rgba(0,0,0,0.5); padding: 10px; display: none;"></div>
-        </div>
-    </div>
-</div>
-
-<!-- Success Modal HTML -->
-<div id="success-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <div style="font-size: 50px; margin-bottom: 20px;">✅</div>
-        <h3 style="color: #4caf50; margin: 0 0 10px 0; font-size: 24px;">Success!</h3>
-        <p style="color: #bbb; margin-bottom: 5px;">Crop Registered Successfully</p>
-        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; margin: 15px 0; font-family: monospace; color: #ffeb3b; word-break: break-all;">
-            Batch ID: <span id="modal-batch-id">Loading...</span>
-        </div>
-        <button onclick="closeSuccessModal()" style="background: #4caf50; border: none; padding: 12px 30px; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">Continue</button>
-    </div>
-</div>
-
-
-
-<script type="module">
-    import { db, collection, addDoc, auth, onAuthStateChanged, query, where, getDocs, deleteDoc, doc, limit } from './firebase-config.js?v=2';
-
-    // Expose debug function
-    // Expose debug function and Modal functions
-    window.closeSuccessModal = function() {
-        document.getElementById('success-modal').style.display = 'none';
-    };
-
-    window.debugCheck = async function() {
-        const log = document.getElementById('debug-log');
-        log.style.display = 'block';
-        log.innerHTML = "Scanning Database...<br>";
-        
-        try {
-            const uid = auth.currentUser.uid;
-            log.innerHTML += `My User ID: <b>${uid}</b><br>------------------------<br>`;
-            
-            // Get last 5 crops regardless of owner
-            const q = query(collection(db, "crops"), limit(5));
-            const snaps = await getDocs(q);
-            
-            if (snaps.empty) {
-                log.innerHTML += "Database is EMPTY. No crops exist at all.";
-                return;
-            }
-
-            snaps.forEach(d => {
-                const data = d.data();
-                const owner = data.farmerId;
-                const match = owner === uid ? "✅ MATCH" : "❌ MISMATCH";
-                
-                log.innerHTML += `Batch ...${d.id.slice(-4)}: Owned By [${owner}] (${match})<br>`;
-            });
-            
-            log.innerHTML += "<br>If you see 'MISMATCH', it means these crops belong to a different User ID.";
-
-        } catch (e) {
-            log.innerText = "Debug Error: " + e.message;
-        }
-    };
-
-    // Check auth state
-    onAuthStateChanged(auth, (user) => {
-        if (!user) {
-            window.location.href = 'login.html';
-        } else {
-            // Show short ID
-            const shortId = user.uid.slice(0, 6) + '...';
-            const display = document.getElementById('my-id-display');
-            display.innerHTML = `ID: <span style="cursor: pointer; border-bottom: 1px dotted #ccc;" title="Click to Copy Full ID">${shortId} 📋</span>`;
-            display.onclick = () => {
-                navigator.clipboard.writeText(user.uid);
-                alert("Full User ID copied to clipboard!");
-            };
-            
-            // Load profile role info
-            checkProfileRole(user.uid);
-            
-            // Load crops
-            loadMyCrops(user.uid);
-        }
-    });
-
-    async function checkProfileRole(uid) {
-        const statusBox = document.getElementById('profile-status');
-        const roleText = document.getElementById('role-display-text');
-        
-        try {
-            const userDoc = await getDoc(doc(db, "users", uid));
-            statusBox.style.display = 'flex';
-            
-            if (userDoc.exists()) {
-                const role = userDoc.data().role;
-                roleText.innerHTML = `Your assigned role: <b style="color: #4caf50;">${role}</b>`;
-                if (role !== 'Farmer') {
-                    roleText.innerHTML += `<br><span style="color: #ff5252; font-size: 11px;">Warning: Registration might fail if you are not a 'Farmer'.</span>`;
-                }
-            } else {
-                roleText.innerHTML = `<span style="color: #ff5252;">Profile missing!</span> Please contact support or re-register.`;
-            }
-        } catch (e) {
-            console.error("Profile check failed:", e);
-            statusBox.style.display = 'flex';
-            roleText.innerText = "Could not verify role: " + e.message;
-        }
-    }
-
-    async function loadMyCrops(uid) {
-        console.log("Loading crops for:", uid);
-        const container = document.getElementById('my-crops-container');
-        container.innerHTML = '<p style="text-align: center; color: #aaa;">Loading...</p>';
-        
-        try {
-            const q = query(collection(db, "crops"), where("farmerId", "==", uid));
-            const snapshot = await getDocs(q);
-            console.log("Found crops:", snapshot.size);
-            
-            container.innerHTML = '';
-            
-            if (snapshot.empty) {
-                container.innerHTML = '<p style="text-align: center; color: #aaa;">No crops registered yet.</p>';
-                // alert("Debug: No crops found for your ID."); // Optional noisy debug
-                return;
-            }
-
-            snapshot.forEach(docSnap => {
-                const data = docSnap.data();
-                const item = document.createElement('div');
-                item.style.background = 'rgba(255,255,255,0.05)';
-                item.style.padding = '15px';
-                item.style.borderRadius = '8px';
-                item.style.marginBottom = '10px';
-                item.style.display = 'flex';
-                item.style.justifyContent = 'space-between';
-                item.style.alignItems = 'center';
-                
-                item.innerHTML = `
-                    <div>
-                        <strong style="color: #4caf50;">${data.name}</strong> (${data.variety})<br>
-                        <span style="font-size: 11px; color: #aaa;">Batch: ${docSnap.id} | Status: ${data.status}</span>
-                    </div>
-                    <button class="delete-btn" data-id="${docSnap.id}" style="background: rgba(239, 83, 80, 0.2); color: #ef5350; border: 1px solid #ef5350; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 10px;">DELETE</button>
-                `;
-                container.appendChild(item);
-            });
-
-            // Add delete listeners
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', async function() {
-                    const id = this.getAttribute('data-id');
-                    if(confirm("Are you sure you want to delete this crop? This action cannot be undone.")) {
-                         try {
-                             await deleteDoc(doc(db, "crops", id));
-                             alert("Crop deleted successfully.");
-                             loadMyCrops(uid); // Refresh
-                         } catch(err) {
-                             console.error(err);
-                             alert("Error deleting: " + err.message);
-                         }
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: "#051424",
+                        surface: "#051424",
+                        primary: "#4edea3",
+                        "primary-container": "#10b981",
+                        "on-primary": "#003824",
+                        "on-primary-container": "#00422b",
+                        "surface-container": "#122131",
+                        "surface-container-high": "#1c2d3d",
+                        "surface-container-low": "#0b1520",
+                        "outline-variant": "#2d3c4c",
+                        "on-surface": "#d4e4fa",
+                        "on-surface-variant": "#9cb0cc"
+                    },
+                    fontFamily: {
+                        sans: ["Hanken Grotesk", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"]
                     }
-                });
-            });
-
-        } catch (e) {
-            console.error(e);
-            container.innerHTML = '<p style="color: red; text-align: center;">Error loading crops.</p>';
+                }
+            }
         }
-    }
+    </script>
+    <style>
+        body {
+            background-color: #051424;
+            color: #d4e4fa;
+            background-image: url("bg-map.jpg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .emerald-glow {
+            box-shadow: 0 0 15px 2px rgba(16, 185, 129, 0.15);
+        }
+        .emerald-btn-glow:hover {
+            box-shadow: 0 0 20px 4px rgba(78, 222, 163, 0.35);
+        }
+        select option {
+            background-color: #122131;
+            color: #d4e4fa;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .language-control {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            min-height: 2.75rem;
+            padding: 0.35rem 0.65rem 0.35rem 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(78, 222, 163, 0.24);
+            background: rgba(18, 33, 49, 0.86);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+        }
+        .language-control .material-symbols-outlined {
+            color: #4edea3;
+            font-size: 1.25rem;
+        }
+        .language-control-label {
+            display: block;
+            margin-bottom: 0.15rem;
+            color: #9cb0cc;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+        #google_translate_element {
+            display: inline-block;
+        }
+        .goog-te-gadget {
+            font-family: 'Hanken Grotesk', sans-serif !important;
+            font-size: 0 !important;
+            color: transparent !important;
+        }
+        .goog-te-gadget .goog-logo-link {
+            display: none !important;
+        }
+        .goog-te-gadget select.goog-te-combo {
+            background: transparent !important;
+            color: #4edea3 !important;
+            border: none !important;
+            font-family: 'Hanken Grotesk', sans-serif !important;
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            outline: none !important;
+            cursor: pointer !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .goog-te-combo option {
+            background-color: #122131 !important;
+            color: #d4e4fa !important;
+            font-family: 'Hanken Grotesk', sans-serif !important;
+        }
+        iframe.skiptranslate,
+        .goog-te-banner-frame {
+            display: none !important;
+        }
+        body {
+            top: 0px !important;
+        }
+        @media (max-width: 760px) {
+            .language-control {
+                gap: 0.45rem;
+                padding: 0.35rem 0.5rem;
+            }
+            .language-control-label {
+                display: none;
+            }
+        }
+    </style>
+    <script src="notifications.js?v=4"></script>
+    <script src="voice-prompts.js?v=8"></script>
+</head>
+<body class="min-h-screen pb-12 pt-24 font-sans selection:bg-primary selection:text-on-primary bg-slate-950/40">
 
-    document.getElementById('cropForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
+    <!-- Top Navigation Bar -->
+    <nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-4 bg-background/85 backdrop-blur-xl border-b border-outline-variant">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+            <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">dataset</span>
+            <span class="text-xl font-bold text-on-surface">TraceCrop</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="text-right">
+                <div id="my-id-display" class="font-mono text-xs text-on-surface-variant cursor-pointer hover:text-primary transition-colors border-b border-dotted border-outline-variant pb-0.5">
+                    ID: Loading...
+                </div>
+            </div>
+            <button onclick="window.location.href='index.html'" 
+                    class="px-4 py-2 rounded-lg bg-surface-container-high hover:bg-red-500/20 hover:text-red-400 border border-outline-variant hover:border-red-500/30 text-sm font-medium transition-all">
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 space-y-8 z-10 relative">
         
-        const btn = this.querySelector('button');
-        const originalText = btn.innerText;
-        btn.innerText = 'Registering on Blockchain...';
+        <!-- Profile status indicator -->
+        <div id="profile-status" style="display: none;" 
+             class="bg-yellow-950/30 border border-yellow-500/30 text-yellow-400 p-4 rounded-xl flex items-start gap-3">
+            <span class="material-symbols-outlined text-2xl">info</span>
+            <div>
+                <div class="font-bold text-sm">Profile Verification</div>
+                <div id="role-display-text" class="text-xs text-on-surface-variant mt-0.5">Checking account role...</div>
+            </div>
+        </div>
 
-        try {
-            const cropData = {
-                name: document.getElementById('cropName').value,
-                variety: document.getElementById('cropVariety').value,
-                sowingDate: document.getElementById('sowingDate').value,
-
-                location: document.getElementById('farmLocation').value,
-                fertilizers: document.getElementById('fertilizers').value,
-                distributorId: (document.getElementById('distributorId').value || '').trim() || 'Unassigned',
-                farmerId: auth.currentUser ? auth.currentUser.uid : 'anonymous',
-                status: 'Registered', // Registered -> Harvested -> In Transit -> Delivered
-                qualityGrade: 'Pending',
-                createdAt: new Date().toISOString()
-            };
-
-            const docRef = await addDoc(collection(db, "crops"), cropData);
+        <!-- Main section card -->
+        <div class="bg-surface-container/85 backdrop-blur-md border border-outline-variant/60 rounded-2xl p-8 shadow-2xl space-y-8">
             
-            // Show Success Modal instead of alert
-            document.getElementById('modal-batch-id').innerText = docRef.id;
-            document.getElementById('success-modal').style.display = 'flex';
-            
-            this.reset();
-            btn.innerText = originalText;
-            loadMyCrops(auth.currentUser.uid); // Refresh list
+            <div class="border-b border-outline-variant/30 pb-6">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary text-3xl">agriculture</span>
+                    <h2 class="text-2xl font-bold tracking-wide uppercase">Farmer Dashboard</h2>
+                </div>
+                <p class="text-sm text-on-surface-variant mt-2">Register new harvest batches to the blockchain ledger and track your distribution status.</p>
+            </div>
 
-        } catch (e) {
-            console.error("Error adding document: ", e);
-            alert("Error: " + e.message);
-            btn.innerText = originalText;
+            <!-- Crop form -->
+            <form id="cropForm" class="space-y-6">
+                <h3 class="text-lg font-bold text-primary font-sans border-b border-outline-variant/20 pb-2">Register New Crop Batch</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Crop Name</label>
+                        <input type="text" id="cropName" placeholder="e.g. Wheat, Tomato" required
+                               data-speech-key="farmer.cropName" data-speech="Enter the crop name, for example wheat, tomato, or rice."
+                               class="w-full px-4 py-3 rounded-lg border border-outline-variant/60 bg-surface-container-low text-on-surface placeholder:text-on-surface-variant/40 focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Crop Variety/Type</label>
+                        <input type="text" id="cropVariety" placeholder="e.g. Organic, Hybrid" required
+                               data-speech-key="farmer.cropVariety" data-speech="Enter the crop variety or type, for example organic or hybrid."
+                               class="w-full px-4 py-3 rounded-lg border border-outline-variant/60 bg-surface-container-low text-on-surface placeholder:text-on-surface-variant/40 focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Sowing Date</label>
+                        <input type="date" id="sowingDate" required
+                               data-speech-key="farmer.sowingDate" data-speech="Select the sowing date when this crop was planted."
+                               class="w-full px-4 py-3 rounded-lg border border-outline-variant/60 bg-surface-container-low text-on-surface focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Farm Location / Land ID</label>
+                        <input type="text" id="farmLocation" placeholder="Enter Farm ID or Location Coordinates" required
+                               data-speech-key="farmer.farmLocation" data-speech="Enter your farm location, land ID, or location coordinates."
+                               class="w-full px-4 py-3 rounded-lg border border-outline-variant/60 bg-surface-container-low text-on-surface placeholder:text-on-surface-variant/40 focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Fertilizers Used (Optional)</label>
+                        <textarea id="fertilizers" placeholder="List any fertilizers or pesticides used..."
+                                  data-speech-key="farmer.fertilizers" data-speech="Optional. List any fertilizers or pesticides used for this crop."
+                                  class="w-full px-4 py-3 rounded-lg border border-outline-variant/60 bg-surface-container-low text-on-surface placeholder:text-on-surface-variant/40 focus:ring-1 focus:ring-primary focus:border-primary transition-all h-24 resize-none"></textarea>
+                    </div>
+                    <div class="md:col-span-2 space-y-3">
+                        <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Upload Crop Image</label>
+                        <input type="file" id="cropImageInput" accept="image/*"
+                               data-speech-key="farmer.cropImage" data-speech="Optional. Upload a clear crop image from your device."
+                               class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-mono file:uppercase file:tracking-wider file:bg-surface-container-high file:text-on-surface hover:file:bg-slate-700 bg-surface-container-low/40 border border-outline-variant/50 p-2 rounded-lg">
+                        
+                        <!-- Upload Status Container -->
+                        <div id="uploadStatusContainer" class="hidden flex items-center gap-3 p-3 bg-surface-container-low border border-outline-variant/30 rounded-xl">
+                            <div id="uploadSpinner" class="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
+                            <span id="uploadStatusText" class="text-xs font-mono text-on-surface-variant">Uploading to Cloudinary...</span>
+                        </div>
+                        <div id="imagePreviewContainer" class="hidden">
+                            <img id="imagePreview" src="" alt="Crop Preview" class="max-h-48 rounded-lg border border-outline-variant/40 object-cover shadow-md">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit"
+                        class="w-full py-4 bg-primary text-on-primary font-bold rounded-lg hover:brightness-110 active:scale-[0.98] transition-all emerald-btn-glow uppercase tracking-wider font-mono">
+                    REGISTER CROP TO BLOCKCHAIN
+                </button>
+            </form>
+
+            <div class="border-t border-outline-variant/30 my-8 pt-8">
+                <h3 class="text-lg font-bold text-primary font-sans mb-4">My Registered Crops</h3>
+                <div id="my-crops-container" class="space-y-4">
+                    <p class="text-center text-on-surface-variant/60 py-8 font-mono text-sm">Loading your crops...</p>
+                </div>
+            </div>
+
+            <!-- Debug Section -->
+            <div class="border-t border-dashed border-outline-variant/40 pt-6">
+                <button onclick="debugCheck()" 
+                        class="text-xs font-mono text-on-surface-variant/70 hover:text-yellow-400 bg-surface-container-low border border-outline-variant/40 px-3 py-1.5 rounded transition-all">
+                    Show Debug Info (Why is my list empty?)
+                </button>
+                <div id="debug-log" style="display: none;" 
+                     class="mt-4 p-4 bg-black/60 border border-yellow-500/20 text-yellow-400 font-mono text-xs rounded-lg overflow-x-auto"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="success-modal" style="display: none;" 
+         class="fixed inset-0 bg-black/95 z-[3000] flex justify-center items-center p-4 backdrop-blur-sm">
+        <div class="bg-surface-container border border-primary/30 p-8 rounded-xl text-center max-w-md w-full shadow-2xl">
+            <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/30">
+                <span class="material-symbols-outlined text-primary text-4xl">check_circle</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Success!</h3>
+            <p class="text-on-surface-variant text-sm mb-4">Crop Registered Successfully</p>
+            <div class="bg-surface-container-low border border-outline-variant/40 p-3 rounded-lg font-mono text-yellow-400 text-xs break-all my-4">
+                Batch ID: <span id="modal-batch-id">Loading...</span>
+            </div>
+            <button onclick="closeSuccessModal()" 
+                    class="px-6 py-2.5 bg-primary text-on-primary font-bold rounded-lg hover:brightness-110 active:scale-[0.98] transition-all">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, collection, addDoc, auth, onAuthStateChanged, query, where, getDocs, deleteDoc, doc, getDoc, setDoc, updateDoc, limit, generatePublicId, generateBatchCode, normalizeFriendlyId } from './firebase-config.js?v=3';
+
+        // Crop image upload setup
+        let uploadedImageUrl = '';
+        let currentUserPublicId = '';
+
+        // Cloudinary file upload listener
+        const imageInput = document.getElementById('cropImageInput');
+        const statusContainer = document.getElementById('uploadStatusContainer');
+        const statusText = document.getElementById('uploadStatusText');
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        const previewImg = document.getElementById('imagePreview');
+
+        if (imageInput) {
+            imageInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const cloudName = localStorage.getItem('cloudinary_cloud_name') || '';
+                const preset = localStorage.getItem('cloudinary_preset') || '';
+
+                if (!cloudName || !preset) {
+                    alert("Image upload is not configured. You can still register the crop without a photo.");
+                    imageInput.value = '';
+                    return;
+                }
+
+                statusContainer.classList.remove('hidden');
+                statusText.innerHTML = '<div class="flex items-center gap-2"><div class="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>Uploading crop image to Cloudinary...</div>';
+                previewContainer.classList.add('hidden');
+                uploadedImageUrl = '';
+
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('upload_preset', preset);
+
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!res.ok) {
+                        const errData = await res.json();
+                        throw new Error(errData.error?.message || `Upload failed with status ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    if (data.secure_url) {
+                        uploadedImageUrl = data.secure_url;
+                        previewImg.src = uploadedImageUrl;
+                        previewContainer.classList.remove('hidden');
+                        statusText.innerHTML = '<span class="text-primary font-bold">Crop image uploaded to Cloudinary!</span>';
+                    } else {
+                        throw new Error("Cloudinary response did not contain secure_url.");
+                    }
+                } catch (err) {
+                    console.error("Cloudinary upload error:", err);
+                    statusText.innerHTML = `<span class="text-red-400">Upload failed: ${err.message}</span>`;
+                    imageInput.value = '';
+                }
+            });
         }
-    });
-</script>
+
+        // Expose debug function and Modal functions
+        window.closeSuccessModal = function() {
+            document.getElementById('success-modal').style.display = 'none';
+        };
+
+        window.debugCheck = async function() {
+            const log = document.getElementById('debug-log');
+            log.style.display = 'block';
+            log.innerHTML = "Scanning Database...<br>";
+            
+            try {
+                const uid = auth.currentUser.uid;
+                log.innerHTML += `My User ID: <b>${uid}</b><br>------------------------<br>`;
+                
+                // Get last 5 crops regardless of owner
+                const q = query(collection(db, "crops"), limit(5));
+                const snaps = await getDocs(q);
+                
+                if (snaps.empty) {
+                    log.innerHTML += "Database is EMPTY. No crops exist at all.";
+                    return;
+                }
+
+                snaps.forEach(d => {
+                    const data = d.data();
+                    const owner = data.farmerId;
+                    const match = owner === uid ? "MATCH" : "MISMATCH";
+                    
+                    log.innerHTML += `Batch ...${d.id.slice(-4)}: Owned By [${owner}] (${match})<br>`;
+                });
+                
+                log.innerHTML += "<br>If you see 'MISMATCH', it means these crops belong to a different User ID.";
+
+            } catch (e) {
+                log.innerText = "Debug Error: " + e.message;
+            }
+        };
+
+        // Check auth state
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+            } else {
+                // Show short ID
+                const shortId = user.uid.slice(0, 6) + '...';
+                const display = document.getElementById('my-id-display');
+                display.innerHTML = `ID: <span class="font-bold text-primary">${shortId} [Copy]</span>`;
+                display.onclick = () => {
+                    navigator.clipboard.writeText(user.uid);
+                    alert("Full User ID copied to clipboard!");
+                };
+                
+                // Load profile role info
+                checkProfileRole(user.uid);
+                
+                // Load crops
+                loadMyCrops(user.uid);
+            }
+        });
+
+        async function checkProfileRole(uid) {
+            const statusBox = document.getElementById('profile-status');
+            const roleText = document.getElementById('role-display-text');
+            
+            try {
+                const userDoc = await getDoc(doc(db, "users", uid));
+                statusBox.style.display = 'flex';
+                
+                if (userDoc.exists()) {
+                    const profile = userDoc.data();
+                    const role = profile.role;
+                    currentUserPublicId = profile.publicId || generatePublicId(role);
+                    if (!profile.publicId) {
+                        await setDoc(doc(db, "users", uid), { publicId: currentUserPublicId }, { merge: true });
+                    }
+                    const display = document.getElementById('my-id-display');
+                    display.innerHTML = `ID: <span class="font-bold text-primary">${currentUserPublicId}</span>`;
+                    roleText.innerHTML = `Your assigned role: <b class="text-primary">${role}</b>`;
+                    if (role !== 'Farmer') {
+                        roleText.innerHTML += `<br><span class="text-red-400 text-xs font-semibold">Warning: Registration might fail if you are not a 'Farmer'.</span>`;
+                    }
+                } else {
+                    roleText.innerHTML = `<span class="text-red-400">Profile missing!</span> Please contact support or re-register.`;
+                }
+            } catch (e) {
+                console.error("Profile check failed:", e);
+                statusBox.style.display = 'flex';
+                roleText.innerText = "Could not verify role: " + e.message;
+            }
+        }
+
+        async function loadMyCrops(uid) {
+            console.log("Loading crops for:", uid);
+            const container = document.getElementById('my-crops-container');
+            container.innerHTML = '<p class="text-center text-on-surface-variant/60 py-8 font-mono text-sm">Loading...</p>';
+            
+            try {
+                const q = query(collection(db, "crops"), where("farmerId", "==", uid));
+                const snapshot = await getDocs(q);
+                console.log("Found crops:", snapshot.size);
+                
+                container.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    container.innerHTML = '<p class="text-center text-on-surface-variant/50 py-8 font-mono text-sm">No crops registered yet.</p>';
+                    return;
+                }
+
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const item = document.createElement('div');
+                    item.className = 'bg-surface-container-low border border-outline-variant/40 p-4 rounded-xl hover:border-primary/30 transition-all';
+                    
+                    const imageHtml = data.imageUrl 
+                        ? `<img src="${data.imageUrl}" class="w-12 h-12 object-cover rounded-lg border border-outline-variant/30 flex-shrink-0" alt="Crop Image">`
+                        : `<div class="w-12 h-12 bg-surface-container-high rounded-lg flex items-center justify-center border border-outline-variant/30 flex-shrink-0"><span class="material-symbols-outlined text-on-surface-variant/40 text-lg">spa</span></div>`;
+
+                    const transferHtml = data.distributorId && data.distributorId !== 'Unassigned'
+                        ? `<div class="text-xs font-mono text-on-surface-variant/70">Transferred to <span class="text-primary font-semibold">${data.distributorPublicId || 'Distributor'}</span></div>`
+                        : `
+                            <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 pt-4 border-t border-outline-variant/25">
+                                <input type="text" class="transfer-input w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface placeholder:text-on-surface-variant/30 text-xs font-mono focus:ring-1 focus:ring-primary focus:border-primary transition-all" placeholder="Distributor Public ID, e.g. DIST-9M4A" data-speech-key="farmer.transferDistributor" data-speech="Enter the distributor public ID shown in the distributor account, then press Transfer.">
+                                <button class="transfer-btn px-4 py-2 bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-on-primary rounded-lg font-mono text-xs font-bold uppercase transition-all" data-id="${docSnap.id}">
+                                    Transfer
+                                </button>
+                            </div>
+                        `;
+
+                    item.innerHTML = `
+                        <div class="flex flex-col gap-4">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="flex items-center gap-4">
+                                    ${imageHtml}
+                                    <div class="space-y-1">
+                                        <div>
+                                            <strong class="text-primary">${data.name || 'Unnamed crop'}</strong> 
+                                            <span class="text-xs text-on-surface-variant/70">(${data.variety || 'N/A'})</span>
+                                        </div>
+                                        <div class="font-mono text-[11px] text-on-surface-variant/70">
+                                            <span>Batch: ${data.batchCode || docSnap.id}</span>
+                                            <span class="mx-2">|</span>
+                                            <span class="px-2 py-0.5 rounded bg-primary-container/20 text-primary border border-primary/20">${data.status}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="delete-btn px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500 hover:text-white text-red-400 font-mono text-xs transition-all" data-id="${docSnap.id}">
+                                    DELETE
+                                </button>
+                            </div>
+                            ${transferHtml}
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+
+                // Add delete listeners
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', async function() {
+                        const id = this.getAttribute('data-id');
+                        if(confirm("Are you sure you want to delete this crop? This action cannot be undone.")) {
+                             try {
+                                 await deleteDoc(doc(db, "crops", id));
+                                 alert("Crop deleted successfully.");
+                                 loadMyCrops(uid); // Refresh
+                             } catch(err) {
+                                 console.error(err);
+                                 alert("Error deleting: " + err.message);
+                             }
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.transfer-btn').forEach(btn => {
+                    btn.addEventListener('click', async function() {
+                        const id = this.getAttribute('data-id');
+                        const input = this.closest('.grid').querySelector('.transfer-input');
+                        await transferCrop(id, input.value, this);
+                    });
+                });
+
+                window.TraceCropVoicePrompts?.enhance(container);
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p class="text-red-400 text-center py-8">Error loading crops.</p>';
+            }
+        }
+
+        async function transferCrop(cropId, publicIdInput, btn) {
+            const distributorInput = normalizeFriendlyId(publicIdInput);
+            if (!distributorInput) {
+                alert("Please enter a Distributor Public ID, for example DIST-9M4A.");
+                return;
+            }
+
+            const originalText = btn.innerText;
+            btn.innerText = 'Checking...';
+
+            try {
+                const distributorQuery = query(collection(db, "users"), where("publicId", "==", distributorInput), limit(1));
+                const distributorSnap = await getDocs(distributorQuery);
+
+                if (distributorSnap.empty) {
+                    alert(`No distributor found with Public ID ${distributorInput}. Please check the ID and try again.`);
+                    btn.innerText = originalText;
+                    return;
+                }
+
+                const distributorDoc = distributorSnap.docs[0];
+                const distributorData = distributorDoc.data();
+
+                if (distributorData.role !== 'Distributor') {
+                    alert(`${distributorInput} belongs to a ${distributorData.role || 'non-distributor'} account. Please enter a Distributor Public ID.`);
+                    btn.innerText = originalText;
+                    return;
+                }
+
+                btn.innerText = 'Transferring...';
+                await updateDoc(doc(db, "crops", cropId), {
+                    distributorId: distributorDoc.id,
+                    distributorPublicId: distributorData.publicId || distributorInput,
+                    lastUpdated: new Date().toISOString()
+                });
+
+                alert(`Crop transfer assigned to ${distributorData.publicId || distributorInput}.`);
+                loadMyCrops(auth.currentUser.uid);
+            } catch (e) {
+                console.error("Transfer failed:", e);
+                alert("Transfer failed: " + e.message);
+                btn.innerText = originalText;
+            }
+        }
+
+        document.getElementById('cropForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            btn.innerText = 'Registering on Blockchain...';
+
+            try {
+                const batchCode = generateBatchCode();
+                const cropData = {
+                    batchCode: batchCode,
+                    name: document.getElementById('cropName').value,
+                    variety: document.getElementById('cropVariety').value,
+                    sowingDate: document.getElementById('sowingDate').value,
+                    location: document.getElementById('farmLocation').value,
+                    fertilizers: document.getElementById('fertilizers').value,
+                    distributorId: 'Unassigned',
+                    distributorPublicId: '',
+                    farmerId: auth.currentUser ? auth.currentUser.uid : 'anonymous',
+                    farmerPublicId: currentUserPublicId,
+                    status: 'Registered', // Registered -> Harvested -> In Transit -> Delivered
+                    qualityGrade: 'Pending',
+                    imageUrl: uploadedImageUrl || '',
+                    createdAt: new Date().toISOString()
+                };
+
+                const docRef = await addDoc(collection(db, "crops"), cropData);
+                
+                // Show Success Modal instead of alert
+                document.getElementById('modal-batch-id').innerText = batchCode;
+                document.getElementById('success-modal').style.display = 'flex';
+                
+                this.reset();
+                uploadedImageUrl = '';
+                if (statusContainer) statusContainer.classList.add('hidden');
+                if (previewContainer) previewContainer.classList.add('hidden');
+                if (previewImg) previewImg.src = '';
+                
+                btn.innerText = originalText;
+                loadMyCrops(auth.currentUser.uid); // Refresh list
+
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                alert("Error: " + e.message);
+                btn.innerText = originalText;
+            }
+        });
+    </script>
+
+
+    <!-- Floating Language Selector -->
+    <div class="language-control fixed bottom-6 left-6 z-50" aria-label="Page language selector">
+        <span class="material-symbols-outlined" aria-hidden="true">translate</span>
+        <div id="google_translate_element"></div>
+    </div>
 
 <script type="text/javascript">
 function googleTranslateElementInit() {
   new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
 }
 </script>
-<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
+
 </html>

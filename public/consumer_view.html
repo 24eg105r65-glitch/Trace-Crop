@@ -1,292 +1,395 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track Your Food | TraceCrop</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
     <style>
-        .consumer-container {
-            max-width: 600px;
-            width: 100%;
-            margin: 40px auto;
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --emerald-glow: 0 0 20px -5px rgba(78, 222, 163, 0.3);
         }
-        .header-logo {
-            text-align: center;
-            margin-bottom: 40px;
+
+        body {
+            background-color: #051424;
+            color: #d4e4fa;
+            font-family: 'Geist', sans-serif;
+            overflow-x: hidden;
         }
-        .search-area {
-            text-align: center;
-            margin-bottom: 40px;
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
-        .search-input {
-            width: 70%;
-            padding: 12px 20px;
-            border-radius: 30px;
-            border: none;
-            background: #fff;
-            color: #333;
-            font-size: 16px;
+
+        .glass-panel:hover {
+            border-color: rgba(78, 222, 163, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .active-glow {
+            box-shadow: 0 0 15px -5px rgba(78, 222, 163, 0.5);
+        }
+
+        .ease-out-expo {
+            transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .mesh-bg {
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(5, 20, 36, 1) 0px, transparent 50%);
+        }
+
+        .input-focus-ring:focus {
             outline: none;
+            border-color: #4edea3;
+            box-shadow: 0 0 0 1px #4edea3, 0 0 15px -3px rgba(78, 222, 163, 0.4);
         }
-        .search-btn {
-            padding: 12px 24px;
-            border-radius: 30px;
-            border: none;
-            background: #4caf50;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            width: 25%;
-            margin-left: 10px;
+
+        select option {
+            background-color: #122131;
+            color: #d4e4fa;
         }
-        .timeline {
-            position: relative;
-            padding-left: 30px;
-            border-left: 3px solid rgba(255,255,255,0.6); /* Made brighter and thicker */
-            margin-top: 30px;
+        .language-control {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            min-height: 2.75rem;
+            padding: 0.35rem 0.65rem 0.35rem 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(78, 222, 163, 0.24);
+            background: rgba(18, 33, 49, 0.86);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+            position: fixed;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            z-index: 50;
         }
-        .timeline-item {
-            margin-bottom: 30px;
-            position: relative;
+        .language-control .material-symbols-outlined {
+            color: #4edea3;
+            font-size: 1.25rem;
         }
-        .timeline-dot {
-            position: absolute;
-            left: -36px;
-            top: 0;
-            width: 10px;
-            height: 10px;
-            background: #4caf50;
-            border-radius: 50%;
-            border: 2px solid #1a1a1a;
+        #google_translate_element {
+            display: inline-block;
         }
-        .timeline-date {
-            font-size: 12px;
-            color: #4caf50;
-            margin-bottom: 5px;
+        .goog-te-gadget {
+            font-family: 'Hanken Grotesk', sans-serif !important;
+            font-size: 0 !important;
+            color: transparent !important;
         }
-        .timeline-content {
-            background: rgba(255,255,255,0.05);
-            padding: 15px;
-            border-radius: 8px;
+        .goog-te-gadget .goog-logo-link {
+            display: none !important;
         }
-        h4 { margin: 0 0 5px 0; }
-        p { margin: 0; color: #ccc; font-size: 14px; }
-        
-        .product-details {
-            text-align: center;
-            margin-bottom: 30px;
-            display: none; /* Hidden by default */
+        .goog-te-gadget select.goog-te-combo {
+            background: transparent !important;
+            color: #4edea3 !important;
+            border: none !important;
+            font-family: 'Hanken Grotesk', sans-serif !important;
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            outline: none !important;
+            cursor: pointer !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
-        .grade-a {
-            color: #4caf50;
-            font-weight: bold;
-            font-size: 20px;
+        .goog-te-combo option {
+            background-color: #122131 !important;
+            color: #d4e4fa !important;
+            font-family: 'Hanken Grotesk', sans-serif !important;
+        }
+        iframe.skiptranslate,
+        .goog-te-banner-frame {
+            display: none !important;
+        }
+        body {
+            top: 0px !important;
         }
     </style>
-</head>
-<body>
-
-<div class="container consumer-container">
-    <div class="card">
-         <div id="google_translate_element" style="margin-bottom: 20px; text-align: center;"></div>
-        <div class="header-logo">
-            <h1> TraceCrop Viewer</h1>
-            <p>Scan QR code or enter Batch ID to trace your product's journey.</p>
-        </div>
-
-        <div class="search-area">
-            <input type="text" class="search-input" id="batchInput" placeholder="Enter Batch ID (e.g. TRC-2023-889)">
-            <button class="search-btn" onclick="showJourney()">TRACE</button>
-        </div>
-
-
-
-        <div id="results" style="display: none;">
-            <div class="product-details">
-                <h2 id="res-name">Product: ...</h2>
-                <div class="grade-a" id="res-grade">...</div>
-                <p id="res-origin">Origin: ...</p>
-                <p id="res-id" style="font-size: 12px; color: #555; margin-top: 5px;"></p>
-            </div>
-
-            <h3>Journey Timeline</h3>
-            <div class="timeline" id="timeline-container">
-               <!-- Dynamic Timeline -->
-            </div>
-             <button onclick="window.location.href='index.html'" style="width:100%; padding: 10px; background: transparent; border: 1px solid #555; color: #aaa; margin-top: 20px;">Back to Home</button>
-        </div>
-    </div>
-</div>
-
-
-    </div>
-</div>
-<div id="toast-container"></div>
-
-<script>
-    // 1. Global Debug Logger (Console only)
-    function logToScreen(msg, type='INFO') {
-        if(type === 'ERROR') console.error(`[${type}] ${msg}`);
-        else console.log(`[${type}] ${msg}`);
-    }
-    
-    window.onerror = function(msg, url, line) {
-        logToScreen(`${msg} (Line ${line})`, 'ERROR');
-        return false;
-    };
-    
-    // 2. Define safe fallback for button click immediately
-    window.showJourney = function() {
-        showToast("System is still initializing... Please wait.", "warn");
-    };
-
-    // 3. Global Toast Function
-    window.showToast = function(message, type = 'info') {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `<span>${message.replace(/\n/g, '<br>')}</span>`; // Allow line breaks
-
-        // Auto remove
-        setTimeout(() => {
-            toast.classList.add('hiding');
-            toast.addEventListener('animationend', () => toast.remove());
-        }, 4000);
-
-        container.appendChild(toast);
-    };
-    
-    logToScreen("Page script initialized. Waiting for Module...");
-</script>
-
-<script type="module">
-    logToScreen("Module script starting...");
-    
-    import { db, doc, getDoc, collection, query, limit, getDocs, orderBy } from './firebase-config.js?v=2'; // v2 cache buster
-
-    logToScreen("Firebase Config Loaded Successfully.");
-
-    // 3. Define Real Logic
-    // 3. Define Real Logic with Soft Matching
-    window.showJourney = async function() {
-        const btn = document.querySelector('.search-btn');
-        const resultsDiv = document.getElementById('results');
-        const rawInput = document.getElementById('batchInput').value;
-        const input = rawInput.replace(/#/g, '').trim().toUpperCase(); // Normalize to Uppercase for search
-        
-        console.log("Searching for ID (Soft Match):", input);
-
-        if(input.length < 5) {
-            showToast('Please enter at least 5 characters.', 'warn');
-            return;
-        }
-
-        btn.innerText = 'Scanning...';
-        resultsDiv.style.display = 'none';
-
-        try {
-            // STRATEGY: Since user has a partial ID (e.g. FWL1YX7D from fwl1YX7d...), 
-            // and we can't easily substring match doc IDs in Firestore rules,
-            // we will fetch recent crops and matched on the client side for this prototype.
-            // In production, you would store a 'shortId' field to query against.
-            
-            logToScreen(`Scanning database for batch containing "${input}"...`);
-            
-            const q = query(collection(db, "crops"), limit(50)); // Look at last 50 crops
-            const snapshot = await getDocs(q);
-            
-            let foundDoc = null;
-            let foundId = null;
-
-            snapshot.forEach(doc => {
-                // Check if Real ID starts with the input (Case Insensitive)
-                if(doc.id.toUpperCase().includes(input)) {
-                    foundDoc = doc.data();
-                    foundId = doc.id;
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#051424",
+                        "on-secondary-container": "#00452e",
+                        "primary": "#4edea3",
+                        "on-background": "#d4e4fa",
+                        "on-surface": "#d4e4fa",
+                        "surface": "#051424",
+                        "surface-container": "#122131",
+                        "surface-container-high": "#1c2d3d",
+                        "surface-container-low": "#0b1520",
+                        "outline-variant": "#2d3c4c",
+                        "on-surface-variant": "#9cb0cc"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Geist"],
+                        "body-md": ["Geist"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "label-caps": ["Geist"]
+                    }
                 }
-            });
-
-            if (foundDoc) {
-                logToScreen("Match found!");
-                displayResults(foundId, foundDoc);
-            } else {
-                logToScreen("No matching batch found.", 'WARN');
-                showToast("No batch found matching that ID.<br>Try checking the list below.", "error");
             }
-            btn.innerText = 'TRACE';
-
-        } catch (error) {
-            logToScreen(`Trace Error: ${error.message} (${error.code})`, 'ERROR');
-            showToast("System Error: " + error.message, 'error');
-            btn.innerText = 'TRACE';
         }
-    };
+    </script>
+    <script src="notifications.js?v=4"></script>
+</head>
+<body class="mesh-bg min-h-screen pb-12 pt-24 font-sans selection:bg-primary selection:text-on-primary">
 
-    // 4. Helper Functions
-    window.displayResults = function(id, data) {
-         document.getElementById('results').style.display = 'block';
-         document.querySelector('.product-details').style.display = 'block';
-         
-         document.getElementById('res-name').innerText = `Product: ${data.name} (${data.variety})`;
-         document.getElementById('res-origin').innerText = `Origin: ${data.location}`;
-         
-         const reportArea = document.getElementById('res-id');
-         reportArea.innerHTML = `Batch ID: ${id}${data.reportUrl ? ` | <a href="${data.reportUrl}" target="_blank" style="color: #4caf50; font-weight: bold;">[View Lab Report]</a>` : ''}`;
-
-         const gradeEl = document.getElementById('res-grade');
-         gradeEl.innerText = data.qualityGrade || 'Quality Pending';
-         if(data.qualityGrade === 'REJECTED') {
-             gradeEl.style.color = '#f44336';
-         } else if (data.qualityGrade === 'Pending') {
-              gradeEl.style.color = '#ffeb3b';
-         } else {
-             gradeEl.style.color = '#4caf50';
-         }
-
-         const timeline = document.getElementById('timeline-container');
-         timeline.innerHTML = '';
-
-         addTimelineItem(timeline, 'Sown/Registered', data.sowingDate, `Registered by Farmer`);
-         if(data.harvestDate) {
-              addTimelineItem(timeline, 'Harvest Expected/Done', data.harvestDate, 'Harvest date recorded.');
-         }
-         if(data.qualityGrade && data.qualityGrade !== 'Pending') {
-             addTimelineItem(timeline, 'Quality Audited', data.auditedAt || 'N/A', `Graded: ${data.qualityGrade}. ${data.auditNotes || ''}`);
-         }
-         addTimelineItem(timeline, `Current Status: ${data.status}`, data.lastUpdated || data.createdAt, data.location);
-    };
-
-    window.addTimelineItem = function(container, title, date, desc) {
-        const item = document.createElement('div');
-        item.className = 'timeline-item';
-        item.innerHTML = `
-            <div class="timeline-dot"></div>
-            <div class="timeline-date">${date ? new Date(date).toLocaleDateString() : 'Pending'}</div>
-            <div class="timeline-content">
-                <h4>${title}</h4>
-                <p>${desc}</p>
+    <!-- Top Navigation Bar -->
+    <nav class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/5 shadow-sm">
+        <div class="flex justify-between items-center px-6 max-w-7xl mx-auto h-16">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+                <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">hub</span>
+                <span class="text-xl font-bold text-on-surface">TraceCrop</span>
             </div>
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors">Home</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-xl mx-auto px-4 space-y-8 z-10 relative">
+        <!-- Main card -->
+        <div class="glass-panel rounded-3xl p-8 shadow-2xl space-y-6">
+            <div class="text-center space-y-2 mb-8">
+                <span class="material-symbols-outlined text-primary text-4xl mb-2" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+                <h1 class="text-2xl font-bold tracking-wider text-on-surface uppercase font-headline-md">TraceCrop Viewer</h1>
+                <p class="text-sm text-on-surface-variant/80 max-w-sm mx-auto">Scan QR code or enter Batch ID to trace your product's journey.</p>
+            </div>
+
+            <!-- Search Area -->
+            <div class="flex gap-2">
+                <input type="text" id="batchInput" placeholder="Enter Batch Code (e.g. TRC-2026-M7X2)" 
+                       class="flex-1 w-full bg-surface-container/50 border border-outline-variant/30 rounded-xl px-4 py-3 font-body-md text-on-surface placeholder:text-on-surface-variant/30 transition-all ease-out-expo duration-200 input-focus-ring font-mono text-sm"
+                       onkeyup="if(event.key === 'Enter') showJourney()">
+                <button onclick="showJourney()" 
+                        class="bg-primary text-on-primary px-6 py-3 rounded-xl font-title-sm text-title-sm hover:brightness-110 transition-all active:scale-95 uppercase tracking-wider font-mono">
+                    TRACE
+                </button>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" style="display: none;" class="space-y-6 pt-4 border-t border-outline-variant/30">
+                <div class="product-details text-center space-y-2">
+                    <div id="res-image-container" class="hidden mb-4 max-w-xs mx-auto">
+                        <img id="res-image" src="" alt="Crop Image" class="w-full h-48 object-cover rounded-2xl border border-outline-variant/40 shadow-lg">
+                    </div>
+                    <h2 class="text-lg font-bold text-on-surface" id="res-name">Product: ...</h2>
+                    <div class="text-xl font-bold font-mono tracking-wider" id="res-grade">...</div>
+                    <p class="text-sm text-on-surface-variant" id="res-origin">Origin: ...</p>
+                    <p class="text-xs font-mono text-on-surface-variant/60 mt-1" id="res-id"></p>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="text-md font-bold text-primary font-mono uppercase tracking-wider">Journey Timeline</h3>
+                    <div class="relative pl-6 border-l-2 border-primary/30 space-y-6 font-mono" id="timeline-container">
+                       <!-- Dynamic Timeline -->
+                    </div>
+                </div>
+
+                <button onclick="window.location.href='index.html'" 
+                        class="w-full py-3 rounded-xl border border-outline-variant/55 bg-transparent hover:bg-white/5 text-on-surface-variant hover:text-white font-mono text-xs uppercase transition-all mt-4">
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        function logToScreen(msg, type='INFO') {
+            if(type === 'ERROR') console.error(`[${type}] ${msg}`);
+            else console.log(`[${type}] ${msg}`);
+        }
+        
+        window.onerror = function(msg, url, line) {
+            logToScreen(`${msg} (Line ${line})`, 'ERROR');
+            return false;
+        };
+        
+        window.showJourney = function() {
+            showToast("System is still initializing... Please wait.", "warn");
+        };
+
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-xl shadow-xl font-mono text-xs max-w-sm pointer-events-auto border flex justify-between items-center transition-all duration-300 transform translate-x-full opacity-0 animate-[slideIn_0.3s_ease-out_forwards] ${getToastStyle(type)}`;
+            toast.innerHTML = `<span>${message.replace(/\n/g, '<br>')}</span>`;
+
+            setTimeout(() => {
+                toast.className += ' opacity-0 translate-x-full transition-all duration-300';
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 4000);
+
+            container.appendChild(toast);
+        };
+
+        function getToastStyle(type) {
+            if (type === 'error') return 'bg-red-950/90 border-red-500/30 text-red-400';
+            if (type === 'warn') return 'bg-yellow-950/90 border-yellow-500/30 text-yellow-400';
+            return 'bg-slate-900/90 border-primary/30 text-primary';
+        }
+
+        // Custom slide-in animations
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes slideIn {
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
         `;
-        container.appendChild(item);
-    };
+        document.head.appendChild(style);
 
+        logToScreen("Page script initialized. Waiting for Module...");
+    </script>
 
+    <script type="module">
+        logToScreen("Module script starting...");
+        
+        import { db, collection, query, limit, getDocs, normalizeFriendlyId } from './firebase-config.js?v=3';
 
+        logToScreen("Firebase Config Loaded Successfully.");
 
-
-</script>
+        window.showJourney = async function() {
+            const btn = document.querySelector('button');
+            const resultsDiv = document.getElementById('results');
+            const rawInput = document.getElementById('batchInput').value;
+            const input = normalizeFriendlyId(rawInput.replace(/#/g, ''));
             
+            console.log("Searching for ID (Soft Match):", input);
 
+            if(input.length < 5) {
+                showToast('Please enter at least 5 characters.', 'warn');
+                return;
+            }
+
+            btn.innerText = 'Scanning...';
+            resultsDiv.style.display = 'none';
+
+            try {
+                logToScreen(`Scanning database for batch code containing "${input}"...`);
+                
+                const q = query(collection(db, "crops"), limit(50));
+                const snapshot = await getDocs(q);
+                
+                let foundDoc = null;
+                let foundId = null;
+
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const batchCode = (data.batchCode || '').toUpperCase();
+                    if(batchCode.includes(input) || docSnap.id.toUpperCase().includes(input)) {
+                        foundDoc = data;
+                        foundId = docSnap.id;
+                    }
+                });
+
+                if (foundDoc) {
+                    logToScreen("Match found!");
+                    displayResults(foundId, foundDoc);
+                } else {
+                    logToScreen("No matching batch found.", 'WARN');
+                    showToast("No batch found matching that ID.<br>Try checking the list below.", "error");
+                }
+                btn.innerText = 'TRACE';
+
+            } catch (error) {
+                logToScreen(`Trace Error: ${error.message} (${error.code})`, 'ERROR');
+                showToast("System Error: " + error.message, 'error');
+                btn.innerText = 'TRACE';
+            }
+        };
+
+        window.displayResults = function(id, data) {
+             document.getElementById('results').style.display = 'block';
+             
+             const imgContainer = document.getElementById('res-image-container');
+             const imgEl = document.getElementById('res-image');
+             if (data.imageUrl) {
+                 imgEl.src = data.imageUrl;
+                 imgContainer.classList.remove('hidden');
+             } else {
+                 imgContainer.classList.add('hidden');
+                 imgEl.src = '';
+             }
+
+         document.getElementById('res-name').innerText = `Product: ${data.name || 'Unnamed crop'} (${data.variety || 'N/A'})`;
+             document.getElementById('res-origin').innerText = `Origin: ${data.location}`;
+             
+             const reportArea = document.getElementById('res-id');
+             reportArea.innerHTML = `Batch Code: ${data.batchCode || id}${data.reportUrl ? ` | <a href="${data.reportUrl}" target="_blank" class="text-primary hover:underline font-bold">[Lab Report]</a>` : ''}`;
+
+             const gradeEl = document.getElementById('res-grade');
+             gradeEl.innerText = data.qualityGrade || 'Quality Pending';
+             if(data.qualityGrade === 'REJECTED') {
+                 gradeEl.className = 'text-xl font-bold font-mono tracking-wider text-red-400';
+             } else if (data.qualityGrade === 'Pending' || !data.qualityGrade) {
+                 gradeEl.className = 'text-xl font-bold font-mono tracking-wider text-yellow-400';
+             } else {
+                 gradeEl.className = 'text-xl font-bold font-mono tracking-wider text-primary';
+             }
+
+             const timeline = document.getElementById('timeline-container');
+             timeline.innerHTML = '';
+
+             addTimelineItem(timeline, 'Sown/Registered', data.sowingDate, `Registered by Farmer`);
+             if(data.harvestDate) {
+                  addTimelineItem(timeline, 'Harvest Expected/Done', data.harvestDate, 'Harvest date recorded.');
+             }
+             if(data.qualityGrade && data.qualityGrade !== 'Pending') {
+                 addTimelineItem(timeline, 'Quality Audited', data.auditedAt || 'N/A', `Graded: ${data.qualityGrade}. ${data.auditNotes || ''}`);
+             }
+             addTimelineItem(timeline, `Current Status: ${data.status}`, data.lastUpdated || data.createdAt, data.location);
+        };
+
+        window.addTimelineItem = function(container, title, date, desc) {
+            const item = document.createElement('div');
+            item.className = 'relative space-y-1.5';
+            
+            // Render circle icon
+            item.innerHTML = `
+                <div class="absolute -left-[31px] top-1.5 w-2 h-2 rounded-full bg-primary ring-4 ring-primary/20 bg-background border border-primary"></div>
+                <div class="text-[11px] text-primary/75">${date ? new Date(date).toLocaleDateString() : 'Pending'}</div>
+                <div class="glass-panel border border-outline-variant/30 p-4 rounded-xl space-y-1">
+                    <h4 class="text-sm font-bold text-on-surface font-sans">${title}</h4>
+                    <p class="text-xs text-on-surface-variant/80">${desc}</p>
+                </div>
+            `;
+            container.appendChild(item);
+        };
+    </script>
+
+
+    <!-- Floating Language Selector -->
+    <div class="language-control" aria-label="Page language selector">
+        <span class="material-symbols-outlined" aria-hidden="true">translate</span>
+        <div id="google_translate_element"></div>
+    </div>
 
 <script type="text/javascript">
 function googleTranslateElementInit() {
   new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
 }
 </script>
-<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
+
 </html>

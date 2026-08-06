@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributor Dashboard | TraceCrop</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: "#051424",
+                        surface: "#051424",
+                        primary: "#4edea3",
+                        "primary-container": "#10b981",
+                        "on-primary": "#003824",
+                        "on-primary-container": "#00422b",
+                        "surface-container": "#122131",
+                        "surface-container-high": "#1c2d3d",
+                        "surface-container-low": "#0b1520",
+                        "outline-variant": "#2d3c4c",
+                        "on-surface": "#d4e4fa",
+                        "on-surface-variant": "#9cb0cc"
+                    },
+                    fontFamily: {
+                        sans: ["Hanken Grotesk", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #051424;
+            color: #d4e4fa;
+            background-image: url("bg-map.jpg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .emerald-glow {
+            box-shadow: 0 0 15px 2px rgba(16, 185, 129, 0.15);
+        }
+        .emerald-btn-glow:hover {
+            box-shadow: 0 0 20px 4px rgba(78, 222, 163, 0.35);
+        }
+        select option {
+            background-color: #122131;
+            color: #d4e4fa;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .language-control {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            min-height: 2.75rem;
+            padding: 0.35rem 0.65rem 0.35rem 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(78, 222, 163, 0.24);
+            background: rgba(18, 33, 49, 0.86);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+        }
+        .language-control .material-symbols-outlined {
+            color: #4edea3;
+            font-size: 1.25rem;
+        }
+        .language-control-label {
+            display: block;
+            margin-bottom: 0.15rem;
+            color: #9cb0cc;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+        #google_translate_element {
+            display: inline-block;
+        }
+        .goog-te-gadget {
+            font-family: 'Hanken Grotesk', sans-serif !important;
+            font-size: 0 !important;
+            color: transparent !important;
+        }
+        .goog-te-gadget .goog-logo-link {
+            display: none !important;
+        }
+        .goog-te-gadget select.goog-te-combo {
+            background: transparent !important;
+            color: #4edea3 !important;
+            border: none !important;
+            font-family: 'Hanken Grotesk', sans-serif !important;
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            outline: none !important;
+            cursor: pointer !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .goog-te-combo option {
+            background-color: #122131 !important;
+            color: #d4e4fa !important;
+            font-family: 'Hanken Grotesk', sans-serif !important;
+        }
+        iframe.skiptranslate,
+        .goog-te-banner-frame {
+            display: none !important;
+        }
+        body {
+            top: 0px !important;
+        }
+        @media (max-width: 760px) {
+            .language-control {
+                gap: 0.45rem;
+                padding: 0.35rem 0.5rem;
+            }
+            .language-control-label {
+                display: none;
+            }
+        }
+    </style>
+    <script src="notifications.js?v=4"></script>
+    <script src="voice-prompts.js?v=8"></script>
+</head>
+<body class="min-h-screen pb-12 pt-24 font-sans selection:bg-primary selection:text-on-primary bg-slate-950/40">
+
+    <!-- Top Navigation Bar -->
+    <nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-4 bg-background/85 backdrop-blur-xl border-b border-outline-variant">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
+            <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">dataset</span>
+            <span class="text-xl font-bold text-on-surface">TraceCrop</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="text-right">
+                <div id="my-id-display" class="font-mono text-xs text-on-surface-variant cursor-pointer hover:text-primary transition-colors border-b border-dotted border-outline-variant pb-0.5">
+                    ID: Loading...
+                </div>
+            </div>
+            <button onclick="window.location.href='index.html'" 
+                    class="px-4 py-2 rounded-lg bg-surface-container-high hover:bg-red-500/20 hover:text-red-400 border border-outline-variant hover:border-red-500/30 text-sm font-medium transition-all">
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 space-y-8 z-10 relative">
+        
+        <!-- Main section card -->
+        <div class="bg-surface-container/85 backdrop-blur-md border border-outline-variant/60 rounded-2xl p-8 shadow-2xl space-y-8">
+            
+            <div class="border-b border-outline-variant/30 pb-6">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary text-3xl">local_shipping</span>
+                    <h2 class="text-2xl font-bold tracking-wide uppercase">Distributor Dashboard</h2>
+                </div>
+                <p class="text-sm text-on-surface-variant mt-2">Manage logistics, track delivery routes, and update crop batch environments during transit.</p>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-bold text-primary font-sans mb-4">Incoming Transfer Requests</h3>
+                <p class="text-sm text-on-surface-variant mb-6">Accept transfers of newly registered crops to start tracking them.</p>
+                
+                <div id="transfers-container" class="space-y-6">
+                    <p class="text-center text-on-surface-variant/60 py-8 font-mono text-sm">Loading requests...</p>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-bold text-primary font-sans mb-4">Active Shipments</h3>
+                <p class="text-sm text-on-surface-variant mb-6">Update shipment conditions and coordinates below.</p>
+                
+                <div id="shipments-container" class="space-y-6">
+                    <p class="text-center text-on-surface-variant/60 py-8 font-mono text-sm">Loading shipments...</p>
+                </div>
+            </div>
+
+            <!-- Debugging Section -->
+            <div class="border-t border-dashed border-outline-variant/40 pt-6">
+                <button onclick="debugCheck()" 
+                        class="text-xs font-mono text-on-surface-variant/70 hover:text-yellow-400 bg-surface-container-low border border-outline-variant/40 px-3 py-1.5 rounded transition-all">
+                    Show Debug Info (If Empty)
+                </button>
+                <div id="debug-log" style="display: none;" 
+                     class="mt-4 p-4 bg-black/60 border border-yellow-500/20 text-yellow-400 font-mono text-xs rounded-lg overflow-x-auto"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <script type="module">
+        let currentUserPublicId = 'DIST-8042';
+
+        document.getElementById('my-id-display').innerHTML = `ID: <span class="font-bold text-primary">${currentUserPublicId}</span>`;
+
+        function loadShipments() {
+            const shipmentsContainer = document.getElementById('shipments-container');
+            const transfersContainer = document.getElementById('transfers-container');
+            
+            transfersContainer.innerHTML = '<p class="text-center text-on-surface-variant/50 py-8 font-mono text-sm">No incoming transfer requests found.</p>';
+            
+            const data = {
+                batchCode: "TRC-2026-WVR3",
+                name: "Organic Tomatoes",
+                variety: "Cherry",
+                status: "In Transit",
+                farmerPublicId: "FARM-1234",
+                location: "Hyderabad Highway",
+                imageUrl: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800"
+            };
+            const cropId = "fake-id-123";
+
+            const card = document.createElement('div');
+            card.className = 'bg-surface-container-low border border-outline-variant/40 p-6 rounded-xl space-y-4 hover:border-primary/20 transition-all';
+            const imageHtml = data.imageUrl 
+                 ? `<img src="${data.imageUrl}" class="w-12 h-12 object-cover rounded-lg border border-outline-variant/30 flex-shrink-0" alt="Crop Image">`
+                 : `<div class="w-12 h-12 bg-surface-container-high rounded-lg flex items-center justify-center border border-outline-variant/30 flex-shrink-0"><span class="material-symbols-outlined text-on-surface-variant/40 text-lg">spa</span></div>`;
+
+             card.innerHTML = `
+                 <div class="flex justify-between items-start border-b border-outline-variant/20 pb-3">
+                     <div class="flex items-center gap-3">
+                         ${imageHtml}
+                         <div>
+                             <strong class="text-primary font-mono text-sm cursor-pointer hover:underline" title="Click to Copy Batch Code">Batch ${data.batchCode}</strong>
+                             <div class="text-xs text-on-surface-variant/70 mt-1">${data.name} (${data.variety})</div>
+                         </div>
+                     </div>
+                     <span class="px-2.5 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">${data.status}</span>
+                 </div>
+                
+                <form class="update-form space-y-4" data-id="${cropId}">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Current Location</label>
+                            <input type="text" class="loc-input w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface placeholder:text-on-surface-variant/30 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all" value="${data.location}" placeholder="Update Location">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Update Status</label>
+                            <select class="status-select w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                                <option value="Registered">Registered</option>
+                                <option value="In Transit" selected>In Transit</option>
+                                <option value="Stored">Stored</option>
+                                <option value="Delivered">Delivered</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Temp (C)</label>
+                            <input type="number" class="temp-input w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface placeholder:text-on-surface-variant/30 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all" value="22" placeholder="22">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-wider text-on-surface-variant mb-1">Humidity (%)</label>
+                            <input type="number" class="hum-input w-full px-3 py-2 rounded-lg border border-outline-variant/50 bg-background text-on-surface placeholder:text-on-surface-variant/30 text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all" value="45" placeholder="45">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-primary text-on-primary font-bold rounded-lg hover:brightness-110 active:scale-[0.98] transition-all uppercase font-mono text-xs tracking-wider">UPDATE TRACKING</button>
+                </form>
+             `;
+             shipmentsContainer.innerHTML = '';
+             shipmentsContainer.appendChild(card);
+        }
+
+        loadShipments();
+    </script>
+
+
+    <!-- Floating Language Selector -->
+    <div class="language-control fixed bottom-6 left-6 z-50" aria-label="Page language selector">
+        <span class="material-symbols-outlined" aria-hidden="true">translate</span>
+        <div id="google_translate_element"></div>
+    </div>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+
+</html>

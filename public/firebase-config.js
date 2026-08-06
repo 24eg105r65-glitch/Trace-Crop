@@ -24,9 +24,42 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 
+function rolePrefix(role) {
+  const prefixes = {
+    Farmer: "FARM",
+    Distributor: "DIST",
+    "Quality Auditor": "AUD",
+    Government: "GOV",
+    Consumer: "CONS"
+  };
+  return prefixes[role] || "USER";
+}
+
+function randomCode(length = 4) {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < length; i++) {
+    code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return code;
+}
+
+function generatePublicId(role) {
+  return `${rolePrefix(role)}-${randomCode(4)}`;
+}
+
+function generateBatchCode(date = new Date()) {
+  return `TRC-${date.getFullYear()}-${randomCode(4)}`;
+}
+
+function normalizeFriendlyId(value) {
+  return (value || "").trim().toUpperCase();
+}
+
 export { 
     auth, db, storage, 
     createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, provider, signInWithPopup,
     doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, deleteDoc, limit, orderBy, onSnapshot,
-    ref, uploadBytes, getDownloadURL 
+    ref, uploadBytes, getDownloadURL,
+    generatePublicId, generateBatchCode, normalizeFriendlyId
 };
